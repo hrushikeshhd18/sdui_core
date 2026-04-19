@@ -1,0 +1,38 @@
+name: sdui_core
+description: >
+  A high-performance Server-Driven UI engine for Flutter. Render dynamic,
+  state-aware layouts from JSON payloads. Zero boilerplate, native Bloc/Riverpod
+  support, incremental diffing.
+version: 0.1.0
+homepage: https://github.com/yourusername/sdui_core
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+  flutter: '>=3.22.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.2.0
+  cached_network_image: ^3.3.0
+  url_launcher: ^6.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+topics:
+  - ui
+  - server-driven-ui
+  - sdui
+  - json
+  - dynamic-widgets
+
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  web:
+  windows:
