@@ -185,7 +185,7 @@ void main() {
     });
 
     test('SduiValidationError toString includes code and path', () {
-      final err = const SduiValidationError(
+      const err = SduiValidationError(
         path: 'root/child',
         message: 'Test error',
         code: 'TEST_CODE',

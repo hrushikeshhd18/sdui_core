@@ -8,7 +8,7 @@ import 'package:sdui_core/src/utils/sdui_icons.dart';
 
 /// Returns Material 3 widget builders.
 ///
-/// Register in addition to [createCoreWidgets]:
+/// Register in addition to `createCoreWidgets`:
 /// ```dart
 /// SduiWidgetRegistry.defaults
 ///   ..registerAll(createCoreWidgets())

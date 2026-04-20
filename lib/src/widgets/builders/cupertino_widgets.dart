@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 
 import 'package:sdui_core/src/models/sdui_node.dart';
 import 'package:sdui_core/src/models/sdui_props.dart';
@@ -8,7 +7,7 @@ import 'package:sdui_core/src/registry/widget_registry.dart';
 
 /// Returns Cupertino-style widget builders.
 ///
-/// Register alongside [createCoreWidgets]:
+/// Register alongside `createCoreWidgets`:
 /// ```dart
 /// SduiWidgetRegistry.defaults
 ///   ..registerAll(createCoreWidgets())

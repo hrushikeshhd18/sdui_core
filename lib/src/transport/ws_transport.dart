@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:sdui_core/src/exceptions/sdui_exceptions.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:sdui_core/src/transport/sdui_transport.dart';
 import 'package:sdui_core/src/utils/sdui_logger.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 /// [SduiTransport] implementation using WebSocket for live SDUI updates.
 ///
@@ -41,10 +41,8 @@ final class WebSocketSduiTransport implements SduiTransport {
   Future<Map<String, Object?>> fetch(
     String url, {
     Map<String, String>? headers,
-  }) async {
-    // For HTTP-style one-shot use, take the first message from the stream.
-    return subscribe(url, headers: headers).first;
-  }
+  }) =>
+      subscribe(url, headers: headers).first;
 
   @override
   Stream<Map<String, Object?>> subscribe(

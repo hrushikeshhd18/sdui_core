@@ -107,8 +107,7 @@ class _DebugUnknownTile extends StatelessWidget {
   final String path;
 
   @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
+  Widget build(BuildContext context) => DecoratedBox(
       decoration: BoxDecoration(
         border: Border.all(color: const Color(0xFFFF0000), width: 2),
         color: const Color(0x22FF0000),
@@ -125,5 +124,4 @@ class _DebugUnknownTile extends StatelessWidget {
         ),
       ),
     );
-  }
 }

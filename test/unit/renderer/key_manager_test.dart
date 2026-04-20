@@ -15,7 +15,7 @@ void main() {
 
     test('key encodes parent path and node id+version', () {
       const node = SduiLeafNode(id: 'btn', type: 'sdui:button', version: 2);
-      final key = SduiKeyManager.keyFor(node, parentPath: 'root/header') as ValueKey<String>;
+      final key = SduiKeyManager.keyFor(node, parentPath: 'root/header');
       expect(key.value, contains('btn'));
       expect(key.value, contains('v2'));
       expect(key.value, contains('root/header'));

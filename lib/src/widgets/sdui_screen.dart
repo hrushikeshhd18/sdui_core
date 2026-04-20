@@ -272,9 +272,7 @@ class _SduiScreenState extends State<SduiScreen> {
     }
   }
 
-  SduiNode _parseMap(Map<String, Object?> map) {
-    return SduiParser.parse(map);
-  }
+  SduiNode _parseMap(Map<String, Object?> map) => SduiParser.parse(map);
 
   Future<SduiNode> _parseNode(Map<String, Object?> map) async {
     if (widget.parseInIsolate) {
@@ -348,8 +346,7 @@ class _DefaultErrorWidget extends StatelessWidget {
   final SduiException error;
 
   @override
-  Widget build(BuildContext context) {
-    return Center(
+  Widget build(BuildContext context) => Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -374,7 +371,6 @@ class _DefaultErrorWidget extends StatelessWidget {
         ),
       ),
     );
-  }
 }
 
 class _StaleErrorBanner extends StatelessWidget {
@@ -382,8 +378,7 @@ class _StaleErrorBanner extends StatelessWidget {
   final SduiException error;
 
   @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
+  Widget build(BuildContext context) => ColoredBox(
       color: Colors.orange.shade100,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -401,7 +396,6 @@ class _StaleErrorBanner extends StatelessWidget {
         ),
       ),
     );
-  }
 }
 
 // Avoids lint for unawaited futures we deliberately don't need to await.

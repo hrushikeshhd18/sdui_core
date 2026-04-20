@@ -32,8 +32,7 @@ Widget _buildScreen({
   VoidCallback? onLoad,
   bool pullToRefresh = false,
   bool enableCache = false,
-}) {
-  return MaterialApp(
+}) => MaterialApp(
     home: SduiScope(
       registry: SduiWidgetRegistry()..registerAll(createCoreWidgets()),
       child: Scaffold(
@@ -52,7 +51,6 @@ Widget _buildScreen({
       ),
     ),
   );
-}
 
 void main() {
   group('SduiScreen — loading state', () {
@@ -67,7 +65,7 @@ void main() {
       await tester.pumpWidget(_buildScreen(
         transport: _PendingTransport(),
         loadingBuilder: (_) => const Text('Loading...'),
-      ));
+      ),);
       await tester.pump();
 
       expect(find.text('Loading...'), findsOneWidget);
@@ -91,7 +89,7 @@ void main() {
       await tester.pumpWidget(_buildScreen(
         transport: transport,
         onLoad: () => loadCalled = true,
-      ));
+      ),);
       await tester.pumpAndSettle();
 
       expect(loadCalled, isTrue);
@@ -104,7 +102,7 @@ void main() {
       await tester.pumpWidget(_buildScreen(
         transport: transport,
         onLoad: () => loadCount++,
-      ));
+      ),);
       await tester.pumpAndSettle();
 
       expect(loadCount, 1);
@@ -127,7 +125,7 @@ void main() {
       await tester.pumpWidget(_buildScreen(
         transport: transport,
         errorBuilder: (_, e) => Text('Error: ${e.code}'),
-      ));
+      ),);
       await tester.pumpAndSettle();
 
       expect(find.textContaining('SDUI_003'), findsOneWidget);
@@ -140,7 +138,7 @@ void main() {
       await tester.pumpWidget(_buildScreen(
         transport: transport,
         onError: (e) => capturedError = e,
-      ));
+      ),);
       await tester.pumpAndSettle();
 
       expect(capturedError, isA<SduiNetworkException>());
@@ -154,7 +152,7 @@ void main() {
       await tester.pumpWidget(_buildScreen(
         transport: transport,
         emptyBuilder: (_) => const Text('Nothing here'),
-      ));
+      ),);
       await tester.pumpAndSettle();
 
       expect(find.text('Nothing here'), findsOneWidget);
@@ -178,7 +176,7 @@ void main() {
       await tester.pumpWidget(_buildScreen(
         transport: transport,
         pullToRefresh: true,
-      ));
+      ),);
       await tester.pumpAndSettle();
 
       expect(find.byType(RefreshIndicator), findsOneWidget);

@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:sdui_core/sdui_core.dart' show SduiScreen;
 import 'package:sdui_core/src/utils/sdui_logger.dart';
+import 'package:sdui_core/src/widgets/sdui_screen.dart' show SduiScreen;
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Stale-while-revalidate cache for SDUI JSON payloads.

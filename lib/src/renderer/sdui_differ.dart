@@ -112,7 +112,7 @@ abstract final class SduiDiffer {
         type: SduiDiffType.added,
         path: path,
         newNode: newNode,
-      ));
+      ),);
       // Recursively mark all children as added.
       if (newNode is SduiParentNode) {
         for (final child in newNode.children) {
@@ -127,7 +127,7 @@ abstract final class SduiDiffer {
         type: SduiDiffType.removed,
         path: path,
         oldNode: oldNode,
-      ));
+      ),);
       return;
     }
 
@@ -140,14 +140,14 @@ abstract final class SduiDiffer {
         path: path,
         oldNode: oldNode,
         newNode: newNode,
-      ));
+      ),);
     } else {
       diffs.add(SduiNodeDiff(
         type: SduiDiffType.unchanged,
         path: path,
         oldNode: oldNode,
         newNode: newNode,
-      ));
+      ),);
     }
 
     // Recurse into children if both nodes are parents.
@@ -184,11 +184,11 @@ abstract final class SduiDiffer {
             path: childPath,
             oldNode: oldChild,
             newNode: newChild,
-          ));
+          ),);
           // Still recurse to catch nested updates.
           if (oldChild is SduiParentNode && newChild is SduiParentNode) {
             _diffChildren(
-                oldChild.children, newChild.children, childPath, diffs);
+                oldChild.children, newChild.children, childPath, diffs,);
           }
         } else {
           _diffNode(oldChild, newChild, childPath, diffs);

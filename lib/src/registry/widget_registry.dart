@@ -1,8 +1,10 @@
 import 'package:flutter/widgets.dart';
+import 'package:sdui_core/sdui_core.dart' show SduiScope;
 
 import 'package:sdui_core/src/exceptions/sdui_exceptions.dart';
 import 'package:sdui_core/src/models/sdui_node.dart';
 import 'package:sdui_core/src/registry/action_registry.dart';
+import 'package:sdui_core/src/widgets/sdui_scope.dart' show SduiScope;
 
 /// Context object passed to every [SduiWidgetBuilder].
 ///
@@ -90,11 +92,7 @@ final class SduiWidgetRegistry {
   /// Creates a registry pre-loaded with all built-in `sdui:` widgets.
   ///
   /// This is the registry [SduiScope] uses when none is provided.
-  factory SduiWidgetRegistry.withDefaults() {
-    // Deferred import to avoid a circular dependency at package init time.
-    // The import is resolved at runtime — this is intentional.
-    return SduiWidgetRegistry().._loadDefaults();
-  }
+  factory SduiWidgetRegistry.withDefaults() => SduiWidgetRegistry().._loadDefaults();
 
   /// The shared default registry used by [SduiScope] when no custom
   /// registry is supplied.

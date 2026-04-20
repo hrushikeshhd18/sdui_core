@@ -1,4 +1,6 @@
+import 'package:flutter/material.dart' show AlertDialog, Navigator, SnackBar;
 import 'package:meta/meta.dart';
+import 'package:sdui_core/sdui_core.dart' show SduiActionRegistry, SduiScreen;
 
 /// Well-known action type constants understood by [SduiActionRegistry].
 abstract final class SduiActionType {

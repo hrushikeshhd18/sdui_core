@@ -15,7 +15,7 @@ import 'package:flutter/material.dart';
 /// ```
 @immutable
 final class SduiProps {
-  /// Creates a [SduiProps] wrapper around [map].
+  /// Creates a [SduiProps] wrapper around `map`.
   const SduiProps(this._map);
 
   final Map<String, Object?> _map;
@@ -82,9 +82,7 @@ final class SduiProps {
   /// like `0xFFFF0000`.
   ///
   /// Returns [fallback] if the key is missing or the value can't be parsed.
-  Color getColor(String key, {Color fallback = Colors.transparent}) {
-    return getColorOrNull(key) ?? fallback;
-  }
+  Color getColor(String key, {Color fallback = Colors.transparent}) => getColorOrNull(key) ?? fallback;
 
   /// Returns a [Color] for [key], or `null` if missing or unparseable.
   Color? getColorOrNull(String key) {
@@ -190,8 +188,7 @@ final class SduiProps {
   ///
   /// Supported values: `center`, `topLeft`, `topCenter`, `topRight`,
   /// `centerLeft`, `centerRight`, `bottomLeft`, `bottomCenter`, `bottomRight`.
-  Alignment getAlignment(String key, {Alignment fallback = Alignment.center}) {
-    return switch (_map[key] as String? ?? '') {
+  Alignment getAlignment(String key, {Alignment fallback = Alignment.center}) => switch (_map[key] as String? ?? '') {
       'topLeft' => Alignment.topLeft,
       'topCenter' => Alignment.topCenter,
       'topRight' => Alignment.topRight,
@@ -203,7 +200,6 @@ final class SduiProps {
       'bottomRight' => Alignment.bottomRight,
       _ => fallback,
     };
-  }
 
   // ---------------------------------------------------------------------------
   // Layout enums

@@ -102,13 +102,13 @@ Map<String, dynamic> _homeScreenJson() => {
                 'actions': {},
                 'children': [
                   _productCard('prod_1', 'Organic Apples', r'$3.99',
-                      'https://picsum.photos/seed/apple/200/200'),
+                      'https://picsum.photos/seed/apple/200/200',),
                   _productCard('prod_2', 'Whole Milk 2L', r'$2.49',
-                      'https://picsum.photos/seed/milk/200/200'),
+                      'https://picsum.photos/seed/milk/200/200',),
                   _productCard('prod_3', 'Sourdough Bread', r'$4.99',
-                      'https://picsum.photos/seed/bread/200/200'),
+                      'https://picsum.photos/seed/bread/200/200',),
                   _productCard('prod_4', 'Orange Juice', r'$3.29',
-                      'https://picsum.photos/seed/oj/200/200'),
+                      'https://picsum.photos/seed/oj/200/200',),
                 ],
               },
             ],
@@ -144,7 +144,7 @@ Map<String, dynamic> _homeScreenJson() => {
     };
 
 Map<String, dynamic> _categoryChip(
-        String id, String label, String emoji) =>
+        String id, String label, String emoji,) =>
     {
       'type': 'sdui:padding',
       'id': id,
@@ -200,7 +200,7 @@ Map<String, dynamic> _categoryChip(
     };
 
 Map<String, dynamic> _productCard(
-        String id, String name, String price, String imgUrl) =>
+        String id, String name, String price, String imgUrl,) =>
     {
       'type': 'sdui:card',
       'id': id,
@@ -340,8 +340,7 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+  Widget build(BuildContext context) => MaterialApp(
       title: 'sdui_core Example',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
@@ -349,7 +348,6 @@ class MyApp extends StatelessWidget {
       ),
       home: const HomeScreen(),
     );
-  }
 }
 
 /// Demonstrates [SduiScreen] pointed at a mock URL.
@@ -357,8 +355,7 @@ class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
         title: const Text('sdui_core Demo'),
         backgroundColor: Colors.green,
@@ -380,5 +377,4 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
     );
-  }
 }

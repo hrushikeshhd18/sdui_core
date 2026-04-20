@@ -64,7 +64,6 @@ abstract final class SduiParser {
   static SduiNode parse(Map<String, Object?> map) {
     final result = SduiValidator.validate(
       map,
-      supportedVersions: supportedVersions,
     );
 
     for (final w in result.warnings) {
@@ -96,8 +95,7 @@ abstract final class SduiParser {
   /// Parses a JSON [jsonString] in a background [Isolate].
   ///
   /// Identical result to [parse] but never blocks the UI thread.
-  static Future<SduiNode> parseString(String jsonString) async {
-    return Isolate.run(() {
+  static Future<SduiNode> parseString(String jsonString) async => Isolate.run(() {
       final decoded = jsonDecode(jsonString);
       if (decoded is! Map) {
         throw SduiParseException(
@@ -108,13 +106,12 @@ abstract final class SduiParser {
       }
       return parse(Map<String, Object?>.from(decoded));
     });
-  }
 
   /// Validates [json] without building a node tree.
   ///
   /// Useful for server-side tooling or CI schema checks.
   static SduiValidationResult validate(Map<String, Object?> json) =>
-      SduiValidator.validate(json, supportedVersions: supportedVersions);
+      SduiValidator.validate(json);
 
   // ---------------------------------------------------------------------------
   // Internal helpers

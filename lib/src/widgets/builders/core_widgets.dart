@@ -186,8 +186,7 @@ Widget _buildContainer(SduiNode node, SduiBuildContext ctx) {
     margin: p.getEdgeInsets('margin'),
     decoration: BoxDecoration(
       color: p.getColorOrNull('color'),
-      borderRadius: p.getBorderRadius('borderRadius',
-          fallback: BorderRadius.zero) ==
+      borderRadius: p.getBorderRadius('borderRadius',) ==
               BorderRadius.zero
           ? null
           : p.getBorderRadius('borderRadius'),
@@ -202,7 +201,7 @@ Widget _buildColumn(SduiNode node, SduiBuildContext ctx) {
   final spacing = p.getDouble('spacing');
   return Column(
     mainAxisAlignment:
-        p.getMainAxisAlignment('mainAxisAlignment', fallback: MainAxisAlignment.start),
+        p.getMainAxisAlignment('mainAxisAlignment'),
     crossAxisAlignment: p.getCrossAxisAlignment(
       'crossAxisAlignment',
       fallback: CrossAxisAlignment.start,
@@ -218,10 +217,9 @@ Widget _buildRow(SduiNode node, SduiBuildContext ctx) {
   final spacing = p.getDouble('spacing');
   return Row(
     mainAxisAlignment:
-        p.getMainAxisAlignment('mainAxisAlignment', fallback: MainAxisAlignment.start),
+        p.getMainAxisAlignment('mainAxisAlignment'),
     crossAxisAlignment: p.getCrossAxisAlignment(
       'crossAxisAlignment',
-      fallback: CrossAxisAlignment.center,
     ),
     mainAxisSize: p.getMainAxisSize('mainAxisSize'),
     children: spacing > 0 ? _intersperse(children, SizedBox(width: spacing)) : children,

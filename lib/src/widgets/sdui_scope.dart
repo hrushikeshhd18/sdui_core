@@ -1,8 +1,10 @@
 import 'package:flutter/widgets.dart';
+import 'package:sdui_core/sdui_core.dart' show SduiScreen;
 
 import 'package:sdui_core/src/registry/action_registry.dart';
 import 'package:sdui_core/src/registry/widget_registry.dart';
 import 'package:sdui_core/src/widgets/builders/core_widgets.dart';
+import 'package:sdui_core/src/widgets/sdui_screen.dart' show SduiScreen;
 
 /// Propagates [SduiWidgetRegistry] and [SduiActionRegistry] down the tree.
 ///

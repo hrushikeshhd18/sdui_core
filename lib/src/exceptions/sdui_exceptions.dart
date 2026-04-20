@@ -1,3 +1,6 @@
+import 'package:sdui_core/sdui_core.dart' show SduiNode;
+import 'package:sdui_core/src/models/sdui_node.dart' show SduiNode;
+
 /// Base class for all exceptions thrown by `sdui_core`.
 ///
 /// Every exception carries:
@@ -32,12 +35,10 @@ final class SduiParseException extends SduiException {
   /// Creates a [SduiParseException].
   SduiParseException({
     required this.path,
-    required String message,
+    required super.message,
     this.receivedValue,
-    String code = 'SDUI_001',
+    super.code = 'SDUI_001',
   }) : super(
-          code: code,
-          message: message,
           hint: 'Inspect the JSON payload at path "$path".'
               '${receivedValue != null ? ' Received: $receivedValue' : ''}',
         );
@@ -83,10 +84,9 @@ final class SduiNetworkException extends SduiException {
   SduiNetworkException({
     required this.url,
     this.statusCode,
-    required String message,
+    required super.message,
   }) : super(
           code: 'SDUI_003',
-          message: message,
           hint: 'Check network connectivity and the server at "$url".'
               '${statusCode != null ? ' HTTP status: $statusCode.' : ''}',
         );
@@ -141,10 +141,9 @@ final class SduiActionException extends SduiException {
   /// Creates a [SduiActionException].
   SduiActionException({
     required this.actionName,
-    required String message,
+    required super.message,
   }) : super(
           code: 'SDUI_005',
-          message: message,
           hint: 'Register a handler: '
               'SduiActionRegistry.defaults.register("$actionName", myHandler);',
         );
@@ -163,11 +162,10 @@ final class SduiActionException extends SduiException {
 final class SduiCacheException extends SduiException {
   /// Creates a [SduiCacheException].
   const SduiCacheException({
-    required String message,
+    required super.message,
     this.url,
   }) : super(
           code: 'SDUI_006',
-          message: message,
           hint: 'Ensure SduiCache.init() was awaited before use. '
               'Call SduiCache.instance.clear() to reset corrupted entries.',
         );

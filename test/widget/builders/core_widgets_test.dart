@@ -7,22 +7,21 @@ import '../../helpers/test_helpers.dart';
 void main() {
   group('sdui:text', () {
     testWidgets('renders text from props', (tester) async {
-      final node = SduiLeafNode(
+      const node = SduiLeafNode(
         id: 't1',
         type: 'sdui:text',
         version: 1,
-        props: const {'text': 'Hello World'},
+        props: {'text': 'Hello World'},
       );
       await pumpSduiWidget(tester, node);
       expect(find.text('Hello World'), findsOneWidget);
     });
 
     testWidgets('renders empty when text prop missing', (tester) async {
-      final node = SduiLeafNode(
+      const node = SduiLeafNode(
         id: 't2',
         type: 'sdui:text',
         version: 1,
-        props: const {},
       );
       await pumpSduiWidget(tester, node);
       expect(tester.takeException(), isNull);
@@ -31,11 +30,11 @@ void main() {
 
   group('sdui:image', () {
     testWidgets('renders image widget', (tester) async {
-      final node = SduiLeafNode(
+      const node = SduiLeafNode(
         id: 'img1',
         type: 'sdui:image',
         version: 1,
-        props: const {'url': 'https://example.com/img.png'},
+        props: {'url': 'https://example.com/img.png'},
       );
       await pumpSduiWidget(tester, node);
       expect(find.byType(Image), findsOneWidget);
@@ -44,11 +43,11 @@ void main() {
 
   group('sdui:button', () {
     testWidgets('renders button with label', (tester) async {
-      final node = SduiLeafNode(
+      const node = SduiLeafNode(
         id: 'btn1',
         type: 'sdui:button',
         version: 1,
-        props: const {'label': 'Click me'},
+        props: {'label': 'Click me'},
       );
       await pumpSduiWidget(tester, node);
       expect(find.text('Click me'), findsOneWidget);
@@ -57,11 +56,11 @@ void main() {
 
   group('sdui:icon', () {
     testWidgets('renders Icon widget', (tester) async {
-      final node = SduiLeafNode(
+      const node = SduiLeafNode(
         id: 'ico1',
         type: 'sdui:icon',
         version: 1,
-        props: const {'name': 'home'},
+        props: {'name': 'home'},
       );
       await pumpSduiWidget(tester, node);
       expect(find.byType(Icon), findsOneWidget);
@@ -70,7 +69,7 @@ void main() {
 
   group('sdui:divider', () {
     testWidgets('renders Divider', (tester) async {
-      final node = const SduiLeafNode(id: 'div1', type: 'sdui:divider', version: 1);
+      const node = SduiLeafNode(id: 'div1', type: 'sdui:divider', version: 1);
       await pumpSduiWidget(tester, node);
       expect(find.byType(Divider), findsOneWidget);
     });
@@ -78,12 +77,12 @@ void main() {
 
   group('sdui:spacer', () {
     testWidgets('renders Spacer inside Flex', (tester) async {
-      final node = SduiParentNode(
+      const node = SduiParentNode(
         id: 'col1',
         type: 'sdui:column',
         version: 1,
         children: [
-          const SduiLeafNode(id: 'sp1', type: 'sdui:spacer', version: 1),
+          SduiLeafNode(id: 'sp1', type: 'sdui:spacer', version: 1),
         ],
       );
       await pumpSduiWidget(tester, node);
@@ -93,7 +92,7 @@ void main() {
 
   group('sdui:column and sdui:row', () {
     testWidgets('sdui:column renders children vertically', (tester) async {
-      final node = SduiParentNode(
+      const node = SduiParentNode(
         id: 'col1',
         type: 'sdui:column',
         version: 1,
@@ -102,13 +101,13 @@ void main() {
             id: 'c1',
             type: 'sdui:text',
             version: 1,
-            props: const {'text': 'Item 1'},
+            props: {'text': 'Item 1'},
           ),
           SduiLeafNode(
             id: 'c2',
             type: 'sdui:text',
             version: 1,
-            props: const {'text': 'Item 2'},
+            props: {'text': 'Item 2'},
           ),
         ],
       );
@@ -118,7 +117,7 @@ void main() {
     });
 
     testWidgets('sdui:row renders children', (tester) async {
-      final node = SduiParentNode(
+      const node = SduiParentNode(
         id: 'row1',
         type: 'sdui:row',
         version: 1,
@@ -127,13 +126,13 @@ void main() {
             id: 'r1',
             type: 'sdui:text',
             version: 1,
-            props: const {'text': 'Left'},
+            props: {'text': 'Left'},
           ),
           SduiLeafNode(
             id: 'r2',
             type: 'sdui:text',
             version: 1,
-            props: const {'text': 'Right'},
+            props: {'text': 'Right'},
           ),
         ],
       );
@@ -145,17 +144,17 @@ void main() {
 
   group('sdui:container', () {
     testWidgets('renders container with child', (tester) async {
-      final node = SduiParentNode(
+      const node = SduiParentNode(
         id: 'cnt1',
         type: 'sdui:container',
         version: 1,
-        props: const {'color': '#FF0000'},
+        props: {'color': '#FF0000'},
         children: [
           SduiLeafNode(
             id: 'inner',
             type: 'sdui:text',
             version: 1,
-            props: const {'text': 'Inside'},
+            props: {'text': 'Inside'},
           ),
         ],
       );
@@ -166,17 +165,17 @@ void main() {
 
   group('sdui:padding', () {
     testWidgets('renders padded child', (tester) async {
-      final node = SduiParentNode(
+      const node = SduiParentNode(
         id: 'pad1',
         type: 'sdui:padding',
         version: 1,
-        props: const {'all': 16.0},
+        props: {'all': 16.0},
         children: [
           SduiLeafNode(
             id: 'padchild',
             type: 'sdui:text',
             version: 1,
-            props: const {'text': 'Padded'},
+            props: {'text': 'Padded'},
           ),
         ],
       );
@@ -192,11 +191,10 @@ void main() {
         ..registerAll(createCoreWidgets())
         ..setFallback((node, ctx) => Text('Unknown: ${node.type}'));
 
-      final node = SduiLeafNode(
+      const node = SduiLeafNode(
         id: 'unk1',
         type: 'myapp:custom_widget',
         version: 1,
-        props: const {},
       );
       await pumpSduiWidget(tester, node, registry: reg);
       expect(find.textContaining('myapp:custom_widget'), findsOneWidget);

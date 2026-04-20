@@ -1,4 +1,6 @@
 import 'package:meta/meta.dart';
+import 'package:sdui_core/sdui_core.dart' show SduiParser;
+import 'package:sdui_core/src/parser/sdui_parser.dart' show SduiParser;
 
 /// A single blocking validation error.
 @immutable
@@ -90,14 +92,14 @@ abstract final class SduiValidator {
         path: '<root>',
         message: 'Missing required "sdui_version" field.',
         code: 'MISSING_VERSION',
-      ));
+      ),);
     } else if (!supportedVersions.contains(version)) {
       errors.add(SduiValidationError(
         path: '<root>',
         message: 'Unsupported sdui_version "$version". '
             'Supported: ${supportedVersions.join(', ')}.',
         code: 'INVALID_VERSION',
-      ));
+      ),);
     }
 
     // Locate the root node (may be under 'root' key or the map itself).
@@ -115,7 +117,7 @@ abstract final class SduiValidator {
         path: '<root>',
         message: 'Missing or invalid "root" node.',
         code: 'MISSING_ROOT',
-      ));
+      ),);
     }
 
     return SduiValidationResult(
@@ -138,7 +140,7 @@ abstract final class SduiValidator {
         path: path,
         message: 'Node is missing the required "type" field.',
         code: 'MISSING_TYPE',
-      ));
+      ),);
     }
 
     final id = node['id'];
@@ -147,13 +149,13 @@ abstract final class SduiValidator {
         path: path,
         message: 'Node is missing the required "id" field.',
         code: 'MISSING_ID',
-      ));
+      ),);
     } else if (id is String) {
       if (id.contains(' ')) {
         warnings.add(SduiValidationWarning(
           path: path,
           message: '"id" contains spaces — prefer snake_case.',
-        ));
+        ),);
       }
       if (seenIds.containsKey(id)) {
         errors.add(SduiValidationError(
@@ -161,7 +163,7 @@ abstract final class SduiValidator {
           message:
               'Duplicate id "$id" — also found at "${seenIds[id]}".',
           code: 'DUPLICATE_ID',
-        ));
+        ),);
       } else {
         seenIds[id] = path;
       }
@@ -173,7 +175,7 @@ abstract final class SduiValidator {
         path: path,
         message: '"version" must be an integer, got: $version',
         code: 'INVALID_VERSION_TYPE',
-      ));
+      ),);
     }
 
     final actions = node['actions'];
@@ -186,14 +188,14 @@ abstract final class SduiValidator {
               path: '$path/actions/${entry.key}',
               message: 'Action is missing required "type" field.',
               code: 'MISSING_ACTION_TYPE',
-            ));
+            ),);
           }
           if (!actionVal.containsKey('event')) {
             errors.add(SduiValidationError(
               path: '$path/actions/${entry.key}',
               message: 'Action is missing required "event" field.',
               code: 'MISSING_ACTION_EVENT',
-            ));
+            ),);
           }
         }
       }
@@ -205,7 +207,7 @@ abstract final class SduiValidator {
         path: path,
         message: '"children" must be an array, got: ${children.runtimeType}',
         code: 'INVALID_CHILDREN_TYPE',
-      ));
+      ),);
     } else if (children is List) {
       for (var i = 0; i < children.length; i++) {
         final child = children[i];
@@ -222,7 +224,7 @@ abstract final class SduiValidator {
             path: '$path/children[$i]',
             message: 'Child must be a JSON object.',
             code: 'INVALID_CHILD_TYPE',
-          ));
+          ),);
         }
       }
     }

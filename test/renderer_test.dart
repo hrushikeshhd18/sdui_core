@@ -15,7 +15,6 @@ const _textNode = SduiLeafNode(
   type: 'sdui:text',
   version: 2,
   props: {'text': 'Hello SDUI'},
-  actions: {},
 );
 
 const _unknownNode = SduiUnknownNode(
@@ -41,22 +40,18 @@ void main() {
         id: 'col1',
         type: 'sdui:column',
         version: 1,
-        props: {},
-        actions: {},
         children: [
           SduiLeafNode(
             id: 'c1',
             type: 'sdui:text',
             version: 1,
             props: {'text': 'Child A'},
-            actions: {},
           ),
           SduiLeafNode(
             id: 'c2',
             type: 'sdui:text',
             version: 1,
             props: {'text': 'Child B'},
-            actions: {},
           ),
         ],
       );
@@ -104,23 +99,23 @@ void main() {
   group('SduiKeyManager', () {
     test('shouldRebuild returns true when version changes', () {
       const older =
-          SduiLeafNode(id: 'x', type: 'sdui:text', version: 1, props: {}, actions: {});
+          SduiLeafNode(id: 'x', type: 'sdui:text', version: 1);
       const newer =
-          SduiLeafNode(id: 'x', type: 'sdui:text', version: 2, props: {}, actions: {});
+          SduiLeafNode(id: 'x', type: 'sdui:text', version: 2);
       expect(SduiKeyManager.shouldRebuild(older, newer), isTrue);
     });
 
     test('shouldRebuild returns false when version is unchanged', () {
       const a =
-          SduiLeafNode(id: 'x', type: 'sdui:text', version: 3, props: {}, actions: {});
+          SduiLeafNode(id: 'x', type: 'sdui:text', version: 3);
       const b =
-          SduiLeafNode(id: 'x', type: 'sdui:text', version: 3, props: {}, actions: {});
+          SduiLeafNode(id: 'x', type: 'sdui:text', version: 3);
       expect(SduiKeyManager.shouldRebuild(a, b), isFalse);
     });
 
     test('keyFor includes id and version', () {
       const node =
-          SduiLeafNode(id: 'hero', type: 'sdui:text', version: 5, props: {}, actions: {});
+          SduiLeafNode(id: 'hero', type: 'sdui:text', version: 5);
       final key = SduiKeyManager.keyFor(node);
       expect(key.value, contains('hero'));
       expect(key.value, contains('v5'));
@@ -128,7 +123,7 @@ void main() {
 
     test('keyFor includes parentPath when provided', () {
       const node =
-          SduiLeafNode(id: 'title', type: 'sdui:text', version: 1, props: {}, actions: {});
+          SduiLeafNode(id: 'title', type: 'sdui:text', version: 1);
       final key = SduiKeyManager.keyFor(node, parentPath: 'root/hero');
       expect(key.value, contains('root/hero'));
     });

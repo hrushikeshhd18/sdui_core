@@ -139,7 +139,7 @@ void main() {
       var handlerCalled = false;
       final reg = SduiActionRegistry()
         ..addMiddleware((action, ctx, next) async =>
-            const SduiActionResult.failure(message: 'blocked'))
+            const SduiActionResult.failure(message: 'blocked'),)
         ..register('ev', (_, __) async {
           handlerCalled = true;
           return const SduiActionResult.success();

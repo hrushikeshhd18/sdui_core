@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sdui_core/sdui_core.dart' show SduiScope, SduiScreen;
 import 'package:sdui_core/src/exceptions/sdui_exceptions.dart';
 import 'package:sdui_core/src/models/sdui_action.dart';
 import 'package:sdui_core/src/utils/sdui_logger.dart';
