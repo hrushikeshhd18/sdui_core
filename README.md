@@ -1,8 +1,14 @@
+<p align="center">
+  <img src="assets/logo.png" alt="sdui_core Logo" width="300" />
+</p>
+
 # sdui_core
 
 [![pub.dev](https://img.shields.io/pub/v/sdui_core.svg)](https://pub.dev/packages/sdui_core)
-[![CI](https://github.com/yourusername/sdui_core/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/sdui_core/actions)
-[![codecov](https://codecov.io/gh/yourusername/sdui_core/branch/main/graph/badge.svg)](https://codecov.io/gh/yourusername/sdui_core)
+[![Flutter Platform](https://img.shields.io/badge/Platform-Flutter-02569B?logo=flutter)](https://flutter.dev)
+[![CI](https://github.com/hrushikeshhd18/sdui_core/actions/workflows/ci.yml/badge.svg)](https://github.com/hrushikeshhd18/sdui_core/actions)
+[![codecov](https://codecov.io/gh/hrushikeshhd18/sdui_core/branch/main/graph/badge.svg)](https://codecov.io/gh/hrushikeshhd18/sdui_core)
+[![Stars](https://img.shields.io/github/stars/hrushikeshhd18/sdui_core.svg)](https://github.com/hrushikeshhd18/sdui_core/stargazers)
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](LICENSE)
 
 A production-grade **Server-Driven UI** engine for Flutter. Your backend describes the layout; `sdui_core` renders it as a real native widget tree — no WebView, no code generation, no App Store review for UI changes.
