@@ -1,26 +1,76 @@
-/// sdui_core — A high-performance Server-Driven UI engine for Flutter.
+/// A production-grade Server-Driven UI engine for Flutter.
 ///
-/// Render dynamic, state-aware layouts from plain JSON payloads with zero
-/// boilerplate and native Bloc/Riverpod integration.
+/// `sdui_core` renders dynamic, state-aware layouts from plain JSON payloads
+/// at runtime — no WebView, no code generation, no App Store review for UI
+/// changes.
+///
+/// ## Core concepts
+///
+/// | Class | Responsibility |
+/// |---|---|
+/// | `SduiScreen` | Fetch → validate → parse → cache → diff → render lifecycle |
+/// | `SduiWidgetRegistry` | Maps type strings to Flutter widget builders |
+/// | `SduiActionRegistry` | Maps event names to async action handlers |
+/// | `SduiTransport` | Pluggable fetch layer (HTTP, WebSocket, or custom) |
+/// | `SduiCache` | Stale-while-revalidate cache backed by SharedPreferences |
+/// | `SduiDiffer` | Incremental tree diff by `id + version` |
+/// | `SduiParser` | JSON → `SduiNode` tree, optionally on a background isolate |
+/// | `SduiValidator` | Full-tree structural validation before parsing |
+/// | `SduiProps` | Type-safe prop accessor wrapping `Map<String, Object?>` |
+/// | `SduiTheme` | Named `TextStyle` registry for server-controlled typography |
+/// | `SduiDebugOverlay` | Long-press node inspector (debug builds only) |
 ///
 /// ## Quick start
 ///
 /// ```dart
 /// void main() async {
 ///   WidgetsFlutterBinding.ensureInitialized();
+///   await SduiCache.init(); // enables stale-while-revalidate persistence
 ///
-///   // Optional: initialise the stale-while-revalidate cache.
-///   await SduiCache.init();
-///
-///   // Register built-in widgets.
-///   SduiWidgetRegistry.defaults.registerAll(createCoreWidgets());
-///
-///   runApp(const MyApp());
+///   runApp(
+///     SduiScope(
+///       child: MaterialApp(
+///         home: SduiScreen(url: 'https://api.example.com/layouts/home'),
+///       ),
+///     ),
+///   );
 /// }
-///
-/// // Minimum usage — one widget, one URL.
-/// SduiScreen(url: 'https://api.example.com/layouts/home')
 /// ```
+///
+/// ## Registering custom widgets
+///
+/// ```dart
+/// final registry = SduiWidgetRegistry()
+///   ..registerAll(createCoreWidgets())
+///   ..register('myapp:banner', (node, ctx) {
+///     final p = SduiProps(node.props);
+///     return Container(
+///       color: p.getColor('color', fallback: Colors.blue),
+///       child: Text(p.getString('title')),
+///     );
+///   });
+/// ```
+///
+/// ## Registering custom actions
+///
+/// ```dart
+/// final actionRegistry = SduiActionRegistry()
+///   ..register('add_to_cart', (action, ctx) async {
+///     await CartRepository.instance.add(action.payload['productId'] as String);
+///     return const SduiActionResult.success();
+///   });
+/// ```
+///
+/// ## Exception codes
+///
+/// Every exception is sealed and carries a `code` string:
+///
+/// - `SDUI_001` — `SduiParseException`: JSON structure is invalid.
+/// - `SDUI_002` — `SduiVersionException`: unsupported `sdui_version`.
+/// - `SDUI_003` — `SduiNetworkException`: network failure after all retries.
+/// - `SDUI_004` — `SduiUnknownWidgetException`: no builder for widget type.
+/// - `SDUI_005` — `SduiActionException`: no handler for action event.
+/// - `SDUI_006` — `SduiCacheException`: cache read/write failure.
 library sdui_core;
 
 // Cache

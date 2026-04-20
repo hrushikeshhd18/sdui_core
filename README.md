@@ -1,11 +1,5 @@
-<p align="right">
-  <a href="https://flutter.dev/docs/development/packages-and-plugins/favorites">
-    <img src="https://raw.githubusercontent.com/hrushikeshhd18/sdui_core/main/assets/flutter_favorite.png" alt="Flutter Favorite" width="100" />
-  </a>
-</p>
-
 <p align="center">
-  <img src="https://raw.githubusercontent.com/hrushikeshhd18/sdui_core/main/assets/logo.png" alt="sdui_core" height="100" />
+  <img src="https://raw.githubusercontent.com/hrushikeshhd18/sdui_core/main/assets/logo.png" alt="sdui_core" height="120" />
 </p>
 
 <p align="center">
