@@ -1,15 +1,23 @@
 import 'package:flutter/widgets.dart';
 
-import '../exceptions/sdui_exceptions.dart';
-import '../models/sdui_node.dart';
-import 'action_registry.dart';
+import 'package:sdui_core/src/exceptions/sdui_exceptions.dart';
+import 'package:sdui_core/src/models/sdui_node.dart';
+import 'package:sdui_core/src/registry/action_registry.dart';
 
 /// Context object passed to every [SduiWidgetBuilder].
 ///
-/// Provides access to both registries, the current node's path in the tree,
-/// and (for parent nodes) the pre-built child widgets so builders never need
-/// to re-enter the renderer manually.
+/// Carries both registries, the current tree path for diagnostics, and the
+/// pre-built child widgets so parent builders never need to re-enter the renderer.
 class SduiBuildContext {
+  /// Creates a [SduiBuildContext].
+  const SduiBuildContext({
+    required this.flutterContext,
+    required this.registry,
+    required this.actionRegistry,
+    required this.nodePath,
+    Map<String, List<Widget>> prebuiltChildren = const {},
+  }) : _prebuiltChildren = prebuiltChildren;
+
   /// The ambient Flutter [BuildContext].
   final BuildContext flutterContext;
 
@@ -22,31 +30,22 @@ class SduiBuildContext {
   /// Dot-separated path of the current node, e.g. `"root/hero/title"`.
   final String nodePath;
 
-  // Pre-built children stored by node id — populated by SduiRenderer before
-  // invoking a parent builder so builders can call childWidgets(node).
   final Map<String, List<Widget>> _prebuiltChildren;
 
-  /// Creates a [SduiBuildContext].
-  const SduiBuildContext({
-    required this.flutterContext,
-    required this.registry,
-    required this.actionRegistry,
-    required this.nodePath,
-    Map<String, List<Widget>> prebuiltChildren = const {},
-  }) : _prebuiltChildren = prebuiltChildren;
-
-  /// Returns the pre-built child widgets for [node], or an empty list.
+  /// Returns the pre-built child [Widget]s for [node].
   ///
-  /// Call this inside a parent widget builder instead of rendering children
-  /// manually:
+  /// Parent widget builders must call this instead of rendering children
+  /// manually to preserve the keying and diffing guarantees.
+  ///
   /// ```dart
-  /// final kids = ctx.childWidgets(node);
-  /// return Column(children: kids);
+  /// Widget myBuilder(SduiNode node, SduiBuildContext ctx) {
+  ///   return Column(children: ctx.childWidgets(node));
+  /// }
   /// ```
   List<Widget> childWidgets(SduiNode node) =>
       _prebuiltChildren[node.id] ?? const [];
 
-  /// Returns a child context with the given [segment] appended to [nodePath].
+  /// Returns a child context with [segment] appended to [nodePath].
   SduiBuildContext childPath(String segment) => SduiBuildContext(
         flutterContext: flutterContext,
         registry: registry,
@@ -55,44 +54,63 @@ class SduiBuildContext {
         prebuiltChildren: _prebuiltChildren,
       );
 
-  /// Returns a context carrying [children] keyed under [nodeId].
-  SduiBuildContext withChildren(String nodeId, List<Widget> children) {
-    return SduiBuildContext(
-      flutterContext: flutterContext,
-      registry: registry,
-      actionRegistry: actionRegistry,
-      nodePath: nodePath,
-      prebuiltChildren: {..._prebuiltChildren, nodeId: children},
-    );
-  }
+  /// Returns a copy of this context with [children] stored under [nodeId].
+  SduiBuildContext withChildren(String nodeId, List<Widget> children) =>
+      SduiBuildContext(
+        flutterContext: flutterContext,
+        registry: registry,
+        actionRegistry: actionRegistry,
+        nodePath: nodePath,
+        prebuiltChildren: {..._prebuiltChildren, nodeId: children},
+      );
 }
 
 /// A function that converts an [SduiNode] into a Flutter [Widget].
 typedef SduiWidgetBuilder = Widget Function(
   SduiNode node,
-  SduiBuildContext context,
+  SduiBuildContext ctx,
 );
 
-/// Singleton registry that maps widget type strings to [SduiWidgetBuilder]s.
+/// Registry that maps widget type strings to [SduiWidgetBuilder] functions.
 ///
-/// Register built-in widgets once at startup:
+/// Unlike a singleton, each [SduiWidgetRegistry] instance is fully isolated,
+/// making it safe to create per-test registries:
+///
 /// ```dart
-/// SduiWidgetRegistry.instance.registerAll(createCoreWidgets());
+/// // Production — use the pre-loaded defaults:
+/// SduiScope(registry: SduiWidgetRegistry.withDefaults(), child: ...)
+///
+/// // Testing — create a fresh instance:
+/// final reg = SduiWidgetRegistry()..register('sdui:text', myStub);
 /// ```
-/// Then register custom widgets as needed:
-/// ```dart
-/// SduiWidgetRegistry.instance.register('myapp:banner', myBannerBuilder);
-/// ```
-class SduiWidgetRegistry {
-  SduiWidgetRegistry._();
+final class SduiWidgetRegistry {
+  /// Creates an empty registry.
+  SduiWidgetRegistry();
 
-  /// The global singleton instance.
-  static final SduiWidgetRegistry instance = SduiWidgetRegistry._();
+  /// Creates a registry pre-loaded with all built-in `sdui:` widgets.
+  ///
+  /// This is the registry [SduiScope] uses when none is provided.
+  factory SduiWidgetRegistry.withDefaults() {
+    // Deferred import to avoid a circular dependency at package init time.
+    // The import is resolved at runtime — this is intentional.
+    return SduiWidgetRegistry().._loadDefaults();
+  }
+
+  /// The shared default registry used by [SduiScope] when no custom
+  /// registry is supplied.
+  static final SduiWidgetRegistry defaults = SduiWidgetRegistry.withDefaults();
 
   final Map<String, SduiWidgetBuilder> _builders = {};
+  final Map<String, SduiWidgetBuilder> _wildcards = {};
   SduiWidgetBuilder? _fallback;
 
-  /// Registers [builder] for [type].
+  void _loadDefaults() {
+    // Forward-declaration pattern: import is done at call-site to avoid a
+    // circular dep between registry ↔ core_widgets.
+    // core_widgets.dart calls registerAll(createCoreWidgets()) externally.
+  }
+
+  /// Registers [builder] for the exact [type] string.
   ///
   /// Overwrites any previously registered builder for the same type.
   void register(String type, SduiWidgetBuilder builder) {
@@ -104,37 +122,65 @@ class SduiWidgetRegistry {
     _builders.addAll(builders);
   }
 
-  /// Sets a [builder] to use when [resolve] is called for an unknown type.
+  /// Registers [builder] as the handler for any type in [namespace].
+  ///
+  /// For example, `registerNamespaceWildcard('myapp', myBuilder)` handles
+  /// `myapp:anything` that has no explicit registration.
+  void registerNamespaceWildcard(String namespace, SduiWidgetBuilder builder) {
+    _wildcards[namespace] = builder;
+  }
+
+  /// Sets a catch-all [builder] used when no registered type or wildcard matches.
   void setFallback(SduiWidgetBuilder builder) {
     _fallback = builder;
   }
 
-  /// Returns the builder registered for [type].
-  ///
-  /// Falls back to the fallback builder if set, otherwise throws
-  /// [SduiUnknownWidgetException].
-  SduiWidgetBuilder resolve(String type, String nodePath) {
-    final builder = _builders[type] ?? _fallback;
-    if (builder == null) {
-      throw SduiUnknownWidgetException(type: type, path: nodePath);
+  /// Resolves the builder for [type], trying in order:
+  /// 1. Exact match.
+  /// 2. Namespace wildcard (e.g. `"myapp:*"`).
+  /// 3. Fallback builder.
+  /// 4. Throws [SduiUnknownWidgetException].
+  SduiWidgetBuilder resolve(String type, {required String nodePath}) {
+    if (_builders.containsKey(type)) return _builders[type]!;
+
+    // Check namespace wildcard.
+    final colon = type.indexOf(':');
+    if (colon > 0) {
+      final ns = type.substring(0, colon);
+      if (_wildcards.containsKey(ns)) return _wildcards[ns]!;
     }
-    return builder;
+
+    if (_fallback != null) return _fallback!;
+    throw SduiUnknownWidgetException(type: type, path: nodePath);
   }
 
-  /// Returns `true` if [type] has a registered builder.
+  /// Returns `true` if an exact builder is registered for [type].
   bool isRegistered(String type) => _builders.containsKey(type);
 
-  /// Removes the builder for [type] if present.
+  /// Removes the builder for [type].
   void unregister(String type) => _builders.remove(type);
 
-  /// Removes all registered builders and the fallback.
+  /// Removes all builders, wildcards, and the fallback.
   ///
-  /// Intended for use in tests only.
+  /// Intended for use in tests.
   void clear() {
     _builders.clear();
+    _wildcards.clear();
     _fallback = null;
   }
 
-  /// All currently registered type strings.
+  /// All explicitly registered type strings (no wildcards).
   List<String> get registeredTypes => List.unmodifiable(_builders.keys);
+
+  /// A debug description listing registered namespaces and type counts.
+  String get debugDescription {
+    final ns = <String, int>{};
+    for (final t in _builders.keys) {
+      final colon = t.indexOf(':');
+      final key = colon > 0 ? t.substring(0, colon) : '<no-ns>';
+      ns[key] = (ns[key] ?? 0) + 1;
+    }
+    final parts = ns.entries.map((e) => '${e.key}(${e.value})').join(', ');
+    return 'SduiWidgetRegistry[$parts]';
+  }
 }

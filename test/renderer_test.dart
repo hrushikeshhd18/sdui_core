@@ -3,14 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sdui_core/sdui_core.dart';
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 SduiBuildContext _ctx(BuildContext flutterCtx) => SduiBuildContext(
       flutterContext: flutterCtx,
-      registry: SduiWidgetRegistry.instance,
-      actionRegistry: SduiActionRegistry.instance,
+      registry: SduiWidgetRegistry()..registerAll(createCoreWidgets()),
+      actionRegistry: SduiActionRegistry(),
       nodePath: 'root',
     );
 
@@ -25,32 +21,16 @@ const _textNode = SduiLeafNode(
 const _unknownNode = SduiUnknownNode(
   id: 'ghost',
   type: 'myapp:ghost',
-  version: 1,
-  props: {},
-  actions: {},
 );
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 void main() {
-  setUpAll(() {
-    SduiWidgetRegistry.instance.clear();
-    SduiWidgetRegistry.instance.registerAll(createCoreWidgets());
-  });
-
-  tearDownAll(() {
-    SduiWidgetRegistry.instance.clear();
-  });
-
   group('SduiRenderer', () {
     testWidgets('renders sdui:text node to a Text widget', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Builder(builder: (ctx) {
-            return SduiRenderer.render(_textNode, _ctx(ctx));
-          }),
+          home: Builder(
+            builder: (ctx) => SduiRenderer.render(_textNode, _ctx(ctx)),
+          ),
         ),
       );
       expect(find.text('Hello SDUI'), findsOneWidget);
@@ -83,9 +63,9 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Builder(builder: (ctx) {
-            return SduiRenderer.render(columnNode, _ctx(ctx));
-          }),
+          home: Builder(
+            builder: (ctx) => SduiRenderer.render(columnNode, _ctx(ctx)),
+          ),
         ),
       );
 
@@ -93,15 +73,14 @@ void main() {
       expect(find.text('Child B'), findsOneWidget);
     });
 
-    testWidgets('renders unknown node to error tile in debug mode',
-        (tester) async {
+    testWidgets('renders unknown node to error tile in debug mode', (tester) async {
       if (!kDebugMode) return;
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Builder(builder: (ctx) {
-            return SduiRenderer.render(_unknownNode, _ctx(ctx));
-          }),
+          home: Builder(
+            builder: (ctx) => SduiRenderer.render(_unknownNode, _ctx(ctx)),
+          ),
         ),
       );
 
@@ -111,9 +90,9 @@ void main() {
     testWidgets('KeyedSubtree has correct key for leaf node', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Builder(builder: (ctx) {
-            return SduiRenderer.render(_textNode, _ctx(ctx));
-          }),
+          home: Builder(
+            builder: (ctx) => SduiRenderer.render(_textNode, _ctx(ctx)),
+          ),
         ),
       );
 
@@ -124,32 +103,32 @@ void main() {
 
   group('SduiKeyManager', () {
     test('shouldRebuild returns true when version changes', () {
-      const older = SduiLeafNode(
-          id: 'x', type: 'sdui:text', version: 1, props: {}, actions: {});
-      const newer = SduiLeafNode(
-          id: 'x', type: 'sdui:text', version: 2, props: {}, actions: {});
+      const older =
+          SduiLeafNode(id: 'x', type: 'sdui:text', version: 1, props: {}, actions: {});
+      const newer =
+          SduiLeafNode(id: 'x', type: 'sdui:text', version: 2, props: {}, actions: {});
       expect(SduiKeyManager.shouldRebuild(older, newer), isTrue);
     });
 
     test('shouldRebuild returns false when version is unchanged', () {
-      const a = SduiLeafNode(
-          id: 'x', type: 'sdui:text', version: 3, props: {}, actions: {});
-      const b = SduiLeafNode(
-          id: 'x', type: 'sdui:text', version: 3, props: {}, actions: {});
+      const a =
+          SduiLeafNode(id: 'x', type: 'sdui:text', version: 3, props: {}, actions: {});
+      const b =
+          SduiLeafNode(id: 'x', type: 'sdui:text', version: 3, props: {}, actions: {});
       expect(SduiKeyManager.shouldRebuild(a, b), isFalse);
     });
 
     test('keyFor includes id and version', () {
-      const node = SduiLeafNode(
-          id: 'hero', type: 'sdui:text', version: 5, props: {}, actions: {});
+      const node =
+          SduiLeafNode(id: 'hero', type: 'sdui:text', version: 5, props: {}, actions: {});
       final key = SduiKeyManager.keyFor(node);
       expect(key.value, contains('hero'));
       expect(key.value, contains('v5'));
     });
 
     test('keyFor includes parentPath when provided', () {
-      const node = SduiLeafNode(
-          id: 'title', type: 'sdui:text', version: 1, props: {}, actions: {});
+      const node =
+          SduiLeafNode(id: 'title', type: 'sdui:text', version: 1, props: {}, actions: {});
       final key = SduiKeyManager.keyFor(node, parentPath: 'root/hero');
       expect(key.value, contains('root/hero'));
     });

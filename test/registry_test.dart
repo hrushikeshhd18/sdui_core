@@ -8,13 +8,7 @@ void main() {
   late SduiWidgetRegistry registry;
 
   setUp(() {
-    // Use a fresh instance per test by clearing the global singleton.
-    registry = SduiWidgetRegistry.instance;
-    registry.clear();
-  });
-
-  tearDown(() {
-    registry.clear();
+    registry = SduiWidgetRegistry();
   });
 
   group('SduiWidgetRegistry', () {
@@ -29,19 +23,19 @@ void main() {
 
     test('resolve returns the correct builder', () {
       registry.register('sdui:text', _stub);
-      final builder = registry.resolve('sdui:text', 'root');
+      final builder = registry.resolve('sdui:text', nodePath: 'root');
       expect(builder, same(_stub));
     });
 
     test('resolve returns fallback for unknown type', () {
       registry.setFallback(_stub);
-      final builder = registry.resolve('myapp:unknown', 'root');
+      final builder = registry.resolve('myapp:unknown', nodePath: 'root');
       expect(builder, same(_stub));
     });
 
     test('resolve throws SduiUnknownWidgetException if no fallback is set', () {
       expect(
-        () => registry.resolve('myapp:missing', 'root/hero'),
+        () => registry.resolve('myapp:missing', nodePath: 'root/hero'),
         throwsA(isA<SduiUnknownWidgetException>()),
       );
     });

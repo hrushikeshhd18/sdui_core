@@ -1,31 +1,28 @@
-import 'dart:convert';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:sdui_core/sdui_core.dart';
 
 // ---------------------------------------------------------------------------
-// Mock HTTP client — no server required to run this example
+// Mock transport — no server required to run this example
 // ---------------------------------------------------------------------------
 
-class _MockClient extends http.BaseClient {
-  final http.Client _inner = http.Client();
+class _MockTransport implements SduiTransport {
+  @override
+  Future<Map<String, Object?>> fetch(
+    String url, {
+    Map<String, String>? headers,
+  }) async =>
+      _homeScreenJson();
 
   @override
-  Future<http.StreamedResponse> send(http.BaseRequest request) async {
-    if (request.url.path.contains('/layouts/home')) {
-      return http.StreamedResponse(
-        Stream.value(utf8.encode(jsonEncode(_homeScreenJson()))),
-        200,
-        headers: {'content-type': 'application/json'},
-      );
-    }
-    return _inner.send(request);
-  }
+  Stream<Map<String, Object?>> subscribe(
+    String url, {
+    Map<String, String>? headers,
+  }) =>
+      Stream.value(_homeScreenJson());
 
   @override
-  void close() => _inner.close();
+  Future<void> dispose() async {}
 }
 
 // ---------------------------------------------------------------------------
@@ -319,19 +316,20 @@ Widget _bannerBuilder(SduiNode node, SduiBuildContext ctx) {
 
 void main() {
   // 1. Register built-in widgets.
-  SduiWidgetRegistry.instance.registerAll(createCoreWidgets());
+  SduiWidgetRegistry.defaults.registerAll(createCoreWidgets());
 
   // 2. Register a custom widget.
-  SduiWidgetRegistry.instance.register('myapp:banner', _bannerBuilder);
+  SduiWidgetRegistry.defaults.register('myapp:banner', _bannerBuilder);
 
   // 3. Register a custom action handler.
-  SduiActionRegistry.instance.register(
+  SduiActionRegistry.defaults.register(
     'navigate_to_cart',
     (action, ctx) async {
       debugPrint(
         '[Action] navigate_to_cart — payload: ${action.payload}',
       );
       // In a real app: Navigator.of(ctx.flutterContext).pushNamed('/cart');
+      return const SduiActionResult.success();
     },
   );
 
@@ -369,7 +367,7 @@ class HomeScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: SduiScreen(
           url: 'https://api.example.com/layouts/home',
-          httpClient: _MockClient(),
+          transport: _MockTransport(),
           loadingBuilder: (_) => const Center(
             child: Padding(
               padding: EdgeInsets.all(48),

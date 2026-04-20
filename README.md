@@ -1,80 +1,85 @@
 # sdui_core
 
 [![pub.dev](https://img.shields.io/pub/v/sdui_core.svg)](https://pub.dev/packages/sdui_core)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Flutter](https://img.shields.io/badge/Flutter-%3E%3D3.22-blue.svg)](https://flutter.dev)
+[![CI](https://github.com/yourusername/sdui_core/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/sdui_core/actions)
+[![codecov](https://codecov.io/gh/yourusername/sdui_core/branch/main/graph/badge.svg)](https://codecov.io/gh/yourusername/sdui_core)
+[![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](LICENSE)
 
-**A high-performance Server-Driven UI engine for Flutter.** Render dynamic,
-state-aware layouts from plain JSON payloads — no custom language, zero boilerplate,
-native Bloc/Riverpod integration.
+A high-performance **Server-Driven UI** engine for Flutter. Render dynamic, state-aware layouts from plain JSON payloads at runtime — no App Store review needed for UI changes.
 
 ---
 
-## Why sdui_core vs rfw?
+## Features
 
-| | sdui_core | rfw |
-|---|---|---|
-| Payload format | **Plain JSON** | Custom `.rfwtxt` binary format |
-| Learning curve | None — standard JSON | New domain language |
-| Integration | 3 lines | Boilerplate setup |
-| Bloc / Riverpod | **Native bridges** | Manual wiring |
-| Diffing | **Node id + version** | Full rebuild |
-| Isolate parsing | **Built-in** | Manual |
-| Error handling | **Typed exceptions** | Generic |
+- **Zero-config rendering** — one line to render a full screen from a URL
+- **28+ built-in widget types** — text, image, button, grid, list, card, icon, and more
+- **Material 3 + Cupertino** widget sets included out of the box
+- **Abstract transport layer** — swap HTTP for WebSocket with a single line
+- **Stale-while-revalidate cache** — instant cached render while fresh data loads
+- **7-state screen machine** — loading, loadingWithCache, success, refreshing, error, errorWithCache, empty
+- **Incremental differ** — only rebuilds nodes that changed (by id + version)
+- **Action middleware** — intercept, log, or transform any action
+- **Action debouncing** — built-in double-tap protection
+- **Isolate-based parsing** — JSON decoded off the UI thread by default
+- **Type-safe prop accessors** — `SduiProps` with color, edge-insets, alignment helpers
+- **Sealed exception hierarchy** — every error has a code, message, and actionable hint
+- **Fully testable** — non-singleton registries, mock transport helpers included
 
 ---
 
 ## Quick start
 
-```dart
-// 1. Register built-in widgets once (e.g. in main.dart before runApp).
-SduiWidgetRegistry.instance.registerAll(createCoreWidgets());
-
-// 2. Drop anywhere in your widget tree.
-SduiScreen(url: 'https://api.example.com/layouts/home')
-
-// That's it.
+```yaml
+# pubspec.yaml
+dependencies:
+  sdui_core: ^0.1.0
 ```
+
+```dart
+// main.dart
+void main() {
+  runApp(
+    SduiScope(
+      registry: SduiWidgetRegistry()..registerAll(createCoreWidgets()),
+      child: MaterialApp(home: SduiScreen(url: 'https://api.example.com/home')),
+    ),
+  );
+}
+```
+
+That's it. `SduiScreen` fetches, parses, caches, and renders the JSON layout automatically.
 
 ---
 
-## JSON schema
-
-Every payload must declare `"sdui_version"` and contain a `"root"` node:
+## JSON payload format
 
 ```json
 {
   "sdui_version": "1.0",
   "root": {
     "type": "sdui:column",
-    "id": "home_root",
-    "version": 3,
-    "props": {
-      "mainAxisAlignment": "start"
-    },
+    "id": "root",
+    "version": 1,
+    "props": {},
     "actions": {},
     "children": [
       {
         "type": "sdui:text",
-        "id": "hero_title",
+        "id": "headline",
         "version": 1,
-        "props": {
-          "text": "Flash Sale — 50% off",
-          "style": "h1",
-          "color": "#E53935"
-        },
+        "props": { "text": "Hello from the server!", "style": "h1" },
         "actions": {}
       },
       {
         "type": "sdui:button",
-        "id": "shop_cta",
-        "version": 2,
-        "props": { "label": "Shop now", "variant": "elevated" },
+        "id": "cta",
+        "version": 1,
+        "props": { "label": "Shop now" },
         "actions": {
           "onTap": {
-            "type": "dispatch",
-            "event": "open_flash_sale",
-            "payload": { "campaign_id": "fs_42" }
+            "type": "navigate",
+            "event": "go_shop",
+            "payload": { "route": "/shop" }
           }
         }
       }
@@ -83,129 +88,220 @@ Every payload must declare `"sdui_version"` and contain a `"root"` node:
 }
 ```
 
-### Node fields
+---
 
-| Field | Required | Default | Description |
-|-------|----------|---------|-------------|
-| `type` | ✅ | — | Widget type string |
-| `id` | ✅ | — | Stable server-assigned ID |
-| `version` | | `0` | Increment to force rebuild |
-| `props` | | `{}` | Widget-specific properties |
-| `actions` | | `{}` | Gesture → action mappings |
-| `children` | | `[]` | Ordered child nodes |
+## Built-in widget types
+
+### Core (`createCoreWidgets()`)
+
+| Type | Description |
+|------|-------------|
+| `sdui:text` | `Text` with style mapping |
+| `sdui:image` | `Image.network` with fit/size props |
+| `sdui:button` | `ElevatedButton` / `OutlinedButton` / `FilledButton` |
+| `sdui:icon` | `Icon` from name string |
+| `sdui:divider` | `Divider` / `VerticalDivider` |
+| `sdui:spacer` | `Spacer` |
+| `sdui:column` | `Column` with alignment props |
+| `sdui:row` | `Row` with alignment props |
+| `sdui:stack` | `Stack` with alignment props |
+| `sdui:grid` | `GridView` with columns/spacing/aspectRatio |
+| `sdui:list` | `ListView` / `ListView.builder` |
+| `sdui:card` | `Card` with elevation/color props |
+| `sdui:container` | `Container` with color/padding/border-radius |
+| `sdui:padding` | `Padding` with directional props |
+| `sdui:center` | `Center` |
+| `sdui:expanded` | `Expanded` with flex prop |
+| `sdui:visibility` | Show/hide based on `visible` prop |
+| `sdui:inkwell` | `InkWell` tap wrapper |
+| `sdui:safe_area` | `SafeArea` |
+| `sdui:aspect_ratio` | `AspectRatio` |
+| `sdui:opacity` | `AnimatedOpacity` |
+| `sdui:clip_r_rect` | `ClipRRect` with borderRadius |
+| `sdui:hero` | `Hero` with tag |
+| `sdui:badge` | `Badge` overlay |
+| `sdui:chip` | `ActionChip` / `FilterChip` |
+| `sdui:placeholder` | `Placeholder` widget |
+
+### Material 3 (`createMaterialWidgets()`)
+
+`sdui:list_tile`, `sdui:switch_tile`, `sdui:progress`, `sdui:fab`, `sdui:bottom_nav`, `sdui:nav_rail`, `sdui:drawer`, `sdui:app_bar`, `sdui:search_bar`, `sdui:tab_bar`, `sdui:bottom_sheet`, `sdui:dialog`
+
+### Cupertino (`createCupertinoWidgets()`)
+
+`sdui:cupertino_button`, `sdui:cupertino_nav_bar`, `sdui:cupertino_list_tile`, `sdui:cupertino_switch`, `sdui:cupertino_slider`, `sdui:cupertino_activity`, `sdui:cupertino_dialog`
 
 ---
 
-## Built-in widget reference
-
-| Type | Flutter Widget | Key props |
-|------|---------------|-----------|
-| `sdui:text` | `Text` | `text`, `style`, `maxLines`, `overflow`, `textAlign`, `color`, `fontSize`, `fontWeight` |
-| `sdui:image` | `CachedNetworkImage` | `url`, `width`, `height`, `fit`, `borderRadius` |
-| `sdui:container` | `Container` | `color`, `padding`, `margin`, `width`, `height`, `borderRadius` |
-| `sdui:column` | `Column` | `mainAxisAlignment`, `crossAxisAlignment`, `spacing`, `mainAxisSize` |
-| `sdui:row` | `Row` | `mainAxisAlignment`, `crossAxisAlignment`, `spacing`, `mainAxisSize` |
-| `sdui:stack` | `Stack` | `alignment`, `children` |
-| `sdui:button` | `ElevatedButton` / `OutlinedButton` / `TextButton` | `label`, `variant` (`elevated`\|`outlined`\|`text`), `onTap` action |
-| `sdui:icon` | `Icon` | `name` (string), `size`, `color` |
-| `sdui:divider` | `Divider` | `height`, `thickness`, `color` |
-| `sdui:spacer` | `SizedBox` / `Spacer` | `width`, `height` |
-| `sdui:grid` | `GridView.builder` | `columns`, `spacing`, `aspectRatio`, `children` |
-| `sdui:list` | `ListView.builder` | `scrollDirection`, `children` |
-| `sdui:card` | `Card` | `elevation`, `color`, `borderRadius`, `child` |
-| `sdui:padding` | `Padding` | `all`, `horizontal`, `vertical`, `left`, `top`, `right`, `bottom` |
-| `sdui:center` | `Center` | `child` |
-| `sdui:expanded` | `Expanded` | `flex`, `child` |
-| `sdui:visibility` | `Visibility` | `visible` (bool), `child` |
-| `sdui:inkwell` | `InkWell` | `onTap` action, `borderRadius`, `child` |
-
-### Color formats
-Accept either `"#RRGGBB"`, `"#AARRGGBB"`, or an integer `0xFFRRGGBB`.
-
-### Named text styles
-`"h1"`, `"h2"`, `"h3"`, `"subtitle"`, `"body"`, `"body2"`, `"caption"`, `"label"` — resolved from the ambient `Theme.textTheme`.
-
----
-
-## Custom widget registration
+## Custom widgets
 
 ```dart
-SduiWidgetRegistry.instance.register('myapp:banner', (node, ctx) {
-  final url = node.props['imageUrl'] as String;
-  return HeroBanner(imageUrl: url);
-});
-```
-
----
-
-## Custom action handlers
-
-```dart
-SduiActionRegistry.instance.register('add_to_cart', (action, ctx) async {
-  final productId = action.payload['product_id'] as String;
-  ctx.flutterContext.read<CartCubit>().add(productId);
-});
-```
-
-Built-in action types (`dispatch`, `navigate`, `open_url`, `copy_to_clipboard`,
-`show_snackbar`) are handled automatically — no registration needed.
-
----
-
-## State management integration
-
-### Bloc
-
-```dart
-SduiActionRegistry.instance.register('add_to_cart', (action, ctx) async {
-  BlocProvider.of<CartBloc>(ctx.flutterContext)
-      .add(CartItemAdded(action.payload['sku'] as String));
-});
-```
-
-### Riverpod
-
-```dart
-SduiActionRegistry.instance.register('add_to_cart', (action, ctx) async {
-  final container = ProviderScope.containerOf(ctx.flutterContext);
-  container.read(cartProvider.notifier).add(action.payload['sku'] as String);
-});
-```
-
----
-
-## Full SduiScreen API
-
-```dart
-SduiScreen(
-  url: 'https://api.example.com/layouts/home',
-  headers: {'Authorization': 'Bearer $token'},
-  refreshInterval: const Duration(minutes: 5),
-  parseInIsolate: true,            // default: true — never blocks UI thread
-  loadingBuilder: (_) => MyShimmer(),
-  errorBuilder: (_, err) => MyErrorWidget(err.toString()),
-  emptyBuilder: (_) => const EmptyState(),
-  onEvent: (event, payload) => analytics.track(event, payload),
+SduiScope(
+  registry: SduiWidgetRegistry()
+    ..registerAll(createCoreWidgets())
+    ..register('myapp:banner', (node, ctx) {
+      final p = SduiProps(node.props);
+      return Container(
+        color: p.getColor('color', fallback: Colors.blue),
+        padding: p.getEdgeInsets('padding'),
+        child: Text(p.getString('title')),
+      );
+    }),
+  child: ...,
 )
 ```
 
 ---
 
-## Performance notes
+## Custom actions
 
-- **Isolate parsing** — `SduiParser.parseAsync` runs in a background `Isolate` so large payloads never jank the raster thread.
-- **Incremental diffing** — increment a node's `version` field on the server; only that subtree rebuilds. Unchanged nodes are keyed and skipped.
-- **RepaintBoundary** — every `SduiScreen` root is automatically wrapped. Add `"isolateRepaint": true` to any node's props to isolate its subtree further.
-- **Deterministic keys** — `SduiKeyManager` assigns keys from `id + version`, never list indices, so reordering children doesn't cause unnecessary rebuilds.
+```dart
+SduiScope(
+  actionRegistry: SduiActionRegistry()
+    ..register('add_to_cart', (action, ctx) async {
+      final productId = action.payload['productId'] as String;
+      await cartRepository.add(productId);
+      return const SduiActionResult.success();
+    }),
+  child: ...,
+)
+```
+
+### Built-in action types
+
+| Type | Behaviour |
+|------|-----------|
+| `navigate` | `Navigator.pushNamed` with `payload.route` |
+| `open_url` | `launchUrl` with `payload.url` |
+| `show_snackbar` | `ScaffoldMessenger.showSnackBar` with `payload.message` |
+| `copy_to_clipboard` | `Clipboard.setData` with `payload.text` |
+| `dispatch` | Calls a registered custom handler |
+
+### Action middleware
+
+```dart
+registry.addMiddleware((action, ctx, next) async {
+  analytics.log('sdui_action', {'event': action.event});
+  return next();
+});
+```
 
 ---
 
-## Roadmap (v0.2.0)
+## Transport layer
 
-- [ ] Conditional rendering via `"visible_if"` expression DSL
-- [ ] Animation support (`"sdui:animated_container"`, transition props)
-- [ ] WebSocket / SSE live-update transport
-- [ ] Offline cache with stale-while-revalidate
-- [ ] Form widgets (`sdui:text_field`, `sdui:checkbox`, `sdui:radio`)
-- [ ] A/B testing hooks
-- [ ] Dart DevTools extension for inspecting the live SDUI tree
+```dart
+// HTTP (default)
+SduiScreen(url: 'https://api.example.com/home')
+
+// WebSocket (live updates)
+SduiScreen(
+  url: 'wss://api.example.com/home/live',
+  transport: WebSocketSduiTransport(),
+)
+
+// Custom transport (mock, gRPC, etc.)
+SduiScreen(
+  url: 'my-key',
+  transport: MyCustomTransport(),
+)
+```
+
+---
+
+## Screen configuration
+
+```dart
+SduiScreen(
+  url: 'https://api.example.com/home',
+  headers: {'Authorization': 'Bearer $token'},
+  enableCache: true,              // stale-while-revalidate (default: true)
+  parseInIsolate: true,           // parse JSON off the UI thread (default: true)
+  refreshInterval: Duration(minutes: 5),
+  pullToRefresh: true,
+  loadingBuilder: (_) => const MyLoadingWidget(),
+  errorBuilder: (_, error) => MyErrorWidget(error: error),
+  emptyBuilder: (_) => const MyEmptyState(),
+  onLoad: () => print('First render complete'),
+  onError: (e) => Sentry.captureException(e),
+  onEvent: (event, payload) => analytics.track(event, payload),
+  onRefresh: () => print('Pull-to-refresh triggered'),
+)
+```
+
+---
+
+## Render a pre-parsed node
+
+```dart
+final node = SduiParser.parse(myMap);
+
+// Embed in any existing screen — no network request
+SduiWidget(node: node)
+```
+
+---
+
+## Incremental diffing
+
+```dart
+final result = SduiDiffer.diff(oldTree, newTree);
+if (result.hasDiffs) {
+  print('${result.changedCount} nodes changed');
+  setState(() => _node = result.updatedTree);
+}
+```
+
+---
+
+## Validation
+
+```dart
+final result = SduiParser.validate(myMap);
+if (!result.isValid) {
+  for (final error in result.errors) {
+    print('[${error.code}] ${error.path}: ${error.message}');
+  }
+}
+```
+
+---
+
+## Testing
+
+```dart
+// Fresh per-test registry — no global state pollution
+final reg = SduiWidgetRegistry()
+  ..register('sdui:text', myStubBuilder);
+
+// Mock transport
+final transport = MockSduiTransport(kMinimalPayload);
+await tester.pumpWidget(
+  SduiScreen(
+    url: 'https://test.example.com',
+    transport: transport,
+    enableCache: false,
+    parseInIsolate: false,
+  ),
+);
+await tester.pumpAndSettle();
+```
+
+---
+
+## Exception codes
+
+| Code | Class | Description |
+|------|-------|-------------|
+| `SDUI_001` | `SduiParseException` | JSON parsing failed |
+| `SDUI_002` | `SduiVersionException` | Unsupported `sdui_version` |
+| `SDUI_003` | `SduiNetworkException` | HTTP/network failure |
+| `SDUI_004` | `SduiUnknownWidgetException` | No builder for widget type |
+| `SDUI_005` | `SduiActionException` | No handler for action event |
+| `SDUI_006` | `SduiCacheException` | Cache read/write failure |
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).

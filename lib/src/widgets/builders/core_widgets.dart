@@ -1,19 +1,21 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
-import '../../models/sdui_node.dart';
-import '../../registry/action_registry.dart';
-import '../../registry/widget_registry.dart';
+import 'package:sdui_core/src/models/sdui_node.dart';
+import 'package:sdui_core/src/models/sdui_props.dart';
+import 'package:sdui_core/src/registry/action_registry.dart';
+import 'package:sdui_core/src/registry/widget_registry.dart';
+import 'package:sdui_core/src/utils/sdui_icons.dart';
 
 // ---------------------------------------------------------------------------
 // Public entry point
 // ---------------------------------------------------------------------------
 
-/// Returns a map of all built-in widget builders.
+/// Returns all 28 built-in core widget builders.
 ///
 /// Register once at startup:
 /// ```dart
-/// SduiWidgetRegistry.instance.registerAll(createCoreWidgets());
+/// SduiWidgetRegistry.defaults.registerAll(createCoreWidgets());
 /// ```
 Map<String, SduiWidgetBuilder> createCoreWidgets() => {
       'sdui:text': _buildText,
@@ -34,151 +36,22 @@ Map<String, SduiWidgetBuilder> createCoreWidgets() => {
       'sdui:expanded': _buildExpanded,
       'sdui:visibility': _buildVisibility,
       'sdui:inkwell': _buildInkWell,
+      // New in v0.1.0
+      'sdui:safe_area': _buildSafeArea,
+      'sdui:aspect_ratio': _buildAspectRatio,
+      'sdui:fitted_box': _buildFittedBox,
+      'sdui:clip_r_rect': _buildClipRRect,
+      'sdui:opacity': _buildOpacity,
+      'sdui:transform_scale': _buildTransformScale,
+      'sdui:hero': _buildHero,
+      'sdui:placeholder': _buildPlaceholder,
+      'sdui:badge': _buildBadge,
+      'sdui:chip': _buildChip,
     };
 
 // ---------------------------------------------------------------------------
-// Helper utilities
+// Action helper
 // ---------------------------------------------------------------------------
-
-Color? _color(dynamic raw) {
-  if (raw == null) return null;
-  if (raw is int) return Color(raw);
-  if (raw is String) {
-    final hex = raw.replaceFirst('#', '');
-    if (hex.length == 6) return Color(int.parse('FF$hex', radix: 16));
-    if (hex.length == 8) return Color(int.parse(hex, radix: 16));
-  }
-  return null;
-}
-
-EdgeInsets _padding(Map<String, dynamic> props) {
-  final all = (props['padding'] as num?)?.toDouble() ??
-      (props['all'] as num?)?.toDouble();
-  if (all != null) return EdgeInsets.all(all);
-  return EdgeInsets.only(
-    left: (props['left'] as num?)?.toDouble() ??
-        (props['horizontal'] as num?)?.toDouble() ??
-        0,
-    right: (props['right'] as num?)?.toDouble() ??
-        (props['horizontal'] as num?)?.toDouble() ??
-        0,
-    top: (props['top'] as num?)?.toDouble() ??
-        (props['vertical'] as num?)?.toDouble() ??
-        0,
-    bottom: (props['bottom'] as num?)?.toDouble() ??
-        (props['vertical'] as num?)?.toDouble() ??
-        0,
-  );
-}
-
-EdgeInsets _margin(Map<String, dynamic> props) {
-  final raw = (props['margin'] as num?)?.toDouble();
-  if (raw != null) return EdgeInsets.all(raw);
-  return EdgeInsets.only(
-    left: (props['marginLeft'] as num?)?.toDouble() ?? 0,
-    right: (props['marginRight'] as num?)?.toDouble() ?? 0,
-    top: (props['marginTop'] as num?)?.toDouble() ?? 0,
-    bottom: (props['marginBottom'] as num?)?.toDouble() ?? 0,
-  );
-}
-
-MainAxisAlignment _mainAxis(String? raw) => switch (raw) {
-      'center' => MainAxisAlignment.center,
-      'end' => MainAxisAlignment.end,
-      'spaceBetween' => MainAxisAlignment.spaceBetween,
-      'spaceAround' => MainAxisAlignment.spaceAround,
-      'spaceEvenly' => MainAxisAlignment.spaceEvenly,
-      _ => MainAxisAlignment.start,
-    };
-
-CrossAxisAlignment _crossAxis(String? raw) => switch (raw) {
-      'center' => CrossAxisAlignment.center,
-      'end' => CrossAxisAlignment.end,
-      'stretch' => CrossAxisAlignment.stretch,
-      'baseline' => CrossAxisAlignment.baseline,
-      _ => CrossAxisAlignment.start,
-    };
-
-TextAlign _textAlign(String? raw) => switch (raw) {
-      'center' => TextAlign.center,
-      'right' || 'end' => TextAlign.right,
-      'justify' => TextAlign.justify,
-      _ => TextAlign.left,
-    };
-
-TextOverflow _overflow(String? raw) => switch (raw) {
-      'ellipsis' => TextOverflow.ellipsis,
-      'fade' => TextOverflow.fade,
-      'clip' => TextOverflow.clip,
-      _ => TextOverflow.clip,
-    };
-
-BoxFit _fit(String? raw) => switch (raw) {
-      'cover' => BoxFit.cover,
-      'contain' => BoxFit.contain,
-      'fill' => BoxFit.fill,
-      'fitWidth' => BoxFit.fitWidth,
-      'fitHeight' => BoxFit.fitHeight,
-      'none' => BoxFit.none,
-      _ => BoxFit.cover,
-    };
-
-Alignment _alignment(String? raw) => switch (raw) {
-      'center' => Alignment.center,
-      'topLeft' => Alignment.topLeft,
-      'topCenter' => Alignment.topCenter,
-      'topRight' => Alignment.topRight,
-      'bottomLeft' => Alignment.bottomLeft,
-      'bottomCenter' => Alignment.bottomCenter,
-      'bottomRight' => Alignment.bottomRight,
-      'centerLeft' => Alignment.centerLeft,
-      'centerRight' => Alignment.centerRight,
-      _ => Alignment.center,
-    };
-
-TextStyle _textStyle(Map<String, dynamic> props, BuildContext ctx) {
-  final named = props['style'] as String?;
-  final theme = Theme.of(ctx).textTheme;
-  TextStyle base = switch (named) {
-    'h1' => theme.headlineLarge ?? const TextStyle(),
-    'h2' => theme.headlineMedium ?? const TextStyle(),
-    'h3' => theme.headlineSmall ?? const TextStyle(),
-    'subtitle' || 'subtitle1' => theme.titleMedium ?? const TextStyle(),
-    'body' || 'body1' => theme.bodyLarge ?? const TextStyle(),
-    'body2' => theme.bodyMedium ?? const TextStyle(),
-    'caption' => theme.bodySmall ?? const TextStyle(),
-    'label' => theme.labelMedium ?? const TextStyle(),
-    _ => const TextStyle(),
-  };
-
-  final color = _color(props['color']);
-  final fontSize = (props['fontSize'] as num?)?.toDouble();
-  final fontWeight = switch (props['fontWeight'] as String?) {
-    'bold' => FontWeight.bold,
-    'w100' => FontWeight.w100,
-    'w200' => FontWeight.w200,
-    'w300' => FontWeight.w300,
-    'w400' => FontWeight.w400,
-    'w500' => FontWeight.w500,
-    'w600' => FontWeight.w600,
-    'w700' => FontWeight.w700,
-    'w800' => FontWeight.w800,
-    'w900' => FontWeight.w900,
-    _ => null,
-  };
-
-  return base.copyWith(
-    color: color,
-    fontSize: fontSize,
-    fontWeight: fontWeight,
-  );
-}
-
-BorderRadius? _borderRadius(dynamic raw) {
-  if (raw == null) return null;
-  final r = (raw as num).toDouble();
-  return BorderRadius.circular(r);
-}
 
 Future<void> _fireAction(
   String actionKey,
@@ -196,219 +69,220 @@ Future<void> _fireAction(
 }
 
 // ---------------------------------------------------------------------------
-// 50 most-used Material icons by name
+// Text style helper
 // ---------------------------------------------------------------------------
 
-const Map<String, IconData> _iconMap = {
-  'home': Icons.home,
-  'search': Icons.search,
-  'person': Icons.person,
-  'settings': Icons.settings,
-  'favorite': Icons.favorite,
-  'favorite_border': Icons.favorite_border,
-  'star': Icons.star,
-  'star_border': Icons.star_border,
-  'shopping_cart': Icons.shopping_cart,
-  'add': Icons.add,
-  'remove': Icons.remove,
-  'close': Icons.close,
-  'check': Icons.check,
-  'arrow_back': Icons.arrow_back,
-  'arrow_forward': Icons.arrow_forward,
-  'chevron_right': Icons.chevron_right,
-  'chevron_left': Icons.chevron_left,
-  'expand_more': Icons.expand_more,
-  'expand_less': Icons.expand_less,
-  'menu': Icons.menu,
-  'more_vert': Icons.more_vert,
-  'more_horiz': Icons.more_horiz,
-  'edit': Icons.edit,
-  'delete': Icons.delete,
-  'share': Icons.share,
-  'copy': Icons.copy,
-  'camera': Icons.camera_alt,
-  'image': Icons.image,
-  'phone': Icons.phone,
-  'email': Icons.email,
-  'location': Icons.location_on,
-  'map': Icons.map,
-  'calendar': Icons.calendar_today,
-  'clock': Icons.access_time,
-  'notifications': Icons.notifications,
-  'lock': Icons.lock,
-  'lock_open': Icons.lock_open,
-  'visibility': Icons.visibility,
-  'visibility_off': Icons.visibility_off,
-  'info': Icons.info,
-  'warning': Icons.warning,
-  'error': Icons.error,
-  'help': Icons.help,
-  'refresh': Icons.refresh,
-  'upload': Icons.upload,
-  'download': Icons.download,
-  'filter': Icons.filter_list,
-  'sort': Icons.sort,
-  'check_circle': Icons.check_circle,
-  'cancel': Icons.cancel,
-};
+TextStyle _textStyle(SduiProps p, BuildContext ctx) {
+  final named = p.getString('style');
+  final theme = Theme.of(ctx).textTheme;
+  final base = switch (named) {
+    'display1' || 'displayLarge' => theme.displayLarge ?? const TextStyle(),
+    'h1' || 'headlineLarge' => theme.headlineLarge ?? const TextStyle(),
+    'h2' || 'headlineMedium' => theme.headlineMedium ?? const TextStyle(),
+    'h3' || 'headlineSmall' => theme.headlineSmall ?? const TextStyle(),
+    'subtitle' || 'titleMedium' => theme.titleMedium ?? const TextStyle(),
+    'body' || 'body1' || 'bodyLarge' => theme.bodyLarge ?? const TextStyle(),
+    'body2' || 'bodyMedium' => theme.bodyMedium ?? const TextStyle(),
+    'caption' || 'bodySmall' => theme.bodySmall ?? const TextStyle(),
+    'label' || 'labelMedium' => theme.labelMedium ?? const TextStyle(),
+    'labelSmall' => theme.labelSmall ?? const TextStyle(),
+    _ => const TextStyle(),
+  };
+
+  final fontWeight = switch (p.getString('fontWeight')) {
+    'bold' || 'w700' => FontWeight.w700,
+    'w100' => FontWeight.w100,
+    'w200' => FontWeight.w200,
+    'w300' => FontWeight.w300,
+    'w400' => FontWeight.w400,
+    'w500' => FontWeight.w500,
+    'w600' => FontWeight.w600,
+    'w800' => FontWeight.w800,
+    'w900' => FontWeight.w900,
+    _ => null,
+  };
+
+  final overflow = switch (p.getString('overflow')) {
+    'ellipsis' => TextOverflow.ellipsis,
+    'fade' => TextOverflow.fade,
+    _ => TextOverflow.clip,
+  };
+
+  return base.copyWith(
+    color: p.getColorOrNull('color'),
+    fontSize: p.getDoubleOrNull('fontSize'),
+    fontWeight: fontWeight,
+    overflow: overflow,
+    letterSpacing: p.getDoubleOrNull('letterSpacing'),
+    height: p.getDoubleOrNull('lineHeight'),
+    decoration: p.getBool('underline') ? TextDecoration.underline : null,
+  );
+}
 
 // ---------------------------------------------------------------------------
-// Widget builders (18 types)
+// 28 widget builders
 // ---------------------------------------------------------------------------
 
 Widget _buildText(SduiNode node, SduiBuildContext ctx) {
-  final props = node.props;
-  final text = props['text'] as String? ?? '';
-  final maxLines = (props['maxLines'] as num?)?.toInt();
-  final style = _textStyle(props, ctx.flutterContext);
+  final p = SduiProps(node.props);
   return Text(
-    text,
-    style: style,
-    maxLines: maxLines,
-    overflow: _overflow(props['overflow'] as String?),
-    textAlign: _textAlign(props['textAlign'] as String?),
+    p.getString('text'),
+    style: _textStyle(p, ctx.flutterContext),
+    maxLines: p.getDoubleOrNull('maxLines')?.toInt(),
+    textAlign: p.getTextAlign('textAlign'),
+    softWrap: p.getBool('softWrap', fallback: true),
   );
 }
 
 Widget _buildImage(SduiNode node, SduiBuildContext ctx) {
-  final props = node.props;
-  final url = props['url'] as String? ?? '';
-  final width = (props['width'] as num?)?.toDouble();
-  final height = (props['height'] as num?)?.toDouble();
-  final fit = _fit(props['fit'] as String?);
-  final radius = _borderRadius(props['borderRadius']);
+  final p = SduiProps(node.props);
+  final url = p.getString('url');
+  final radius = p.getBorderRadius('borderRadius');
 
   Widget img = CachedNetworkImage(
     imageUrl: url,
-    width: width,
-    height: height,
-    fit: fit,
+    width: p.getDoubleOrNull('width'),
+    height: p.getDoubleOrNull('height'),
+    fit: p.getBoxFit('fit'),
+    placeholder: (_, __) => const Center(
+      child: SizedBox.square(
+        dimension: 24,
+        child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+      ),
+    ),
+    errorWidget: (_, __, ___) =>
+        const Icon(Icons.broken_image, color: Colors.grey),
   );
 
-  if (radius != null) {
+  if (radius != BorderRadius.zero) {
     img = ClipRRect(borderRadius: radius, child: img);
   }
   return img;
 }
 
 Widget _buildContainer(SduiNode node, SduiBuildContext ctx) {
-  final props = node.props;
+  final p = SduiProps(node.props);
   final children = ctx.childWidgets(node);
-
   return Container(
-    width: (props['width'] as num?)?.toDouble(),
-    height: (props['height'] as num?)?.toDouble(),
-    padding: _padding(props),
-    margin: _margin(props),
+    width: p.getDoubleOrNull('width'),
+    height: p.getDoubleOrNull('height'),
+    padding: p.getEdgeInsets('padding'),
+    margin: p.getEdgeInsets('margin'),
     decoration: BoxDecoration(
-      color: _color(props['color']),
-      borderRadius: _borderRadius(props['borderRadius']),
+      color: p.getColorOrNull('color'),
+      borderRadius: p.getBorderRadius('borderRadius',
+          fallback: BorderRadius.zero) ==
+              BorderRadius.zero
+          ? null
+          : p.getBorderRadius('borderRadius'),
     ),
     child: children.isNotEmpty ? children.first : null,
   );
 }
 
 Widget _buildColumn(SduiNode node, SduiBuildContext ctx) {
-  final props = node.props;
+  final p = SduiProps(node.props);
   final children = ctx.childWidgets(node);
-  final spacing = (props['spacing'] as num?)?.toDouble() ?? 0;
-
-  final spaced =
-      spacing > 0 ? _interleave(children, SizedBox(height: spacing)) : children;
-
+  final spacing = p.getDouble('spacing');
   return Column(
-    mainAxisAlignment: _mainAxis(props['mainAxisAlignment'] as String?),
-    crossAxisAlignment: _crossAxis(props['crossAxisAlignment'] as String?),
-    mainAxisSize:
-        props['mainAxisSize'] == 'min' ? MainAxisSize.min : MainAxisSize.max,
-    children: spaced,
+    mainAxisAlignment:
+        p.getMainAxisAlignment('mainAxisAlignment', fallback: MainAxisAlignment.start),
+    crossAxisAlignment: p.getCrossAxisAlignment(
+      'crossAxisAlignment',
+      fallback: CrossAxisAlignment.start,
+    ),
+    mainAxisSize: p.getMainAxisSize('mainAxisSize'),
+    children: spacing > 0 ? _intersperse(children, SizedBox(height: spacing)) : children,
   );
 }
 
 Widget _buildRow(SduiNode node, SduiBuildContext ctx) {
-  final props = node.props;
+  final p = SduiProps(node.props);
   final children = ctx.childWidgets(node);
-  final spacing = (props['spacing'] as num?)?.toDouble() ?? 0;
-
-  final spaced =
-      spacing > 0 ? _interleave(children, SizedBox(width: spacing)) : children;
-
+  final spacing = p.getDouble('spacing');
   return Row(
-    mainAxisAlignment: _mainAxis(props['mainAxisAlignment'] as String?),
-    crossAxisAlignment: _crossAxis(props['crossAxisAlignment'] as String?),
-    mainAxisSize:
-        props['mainAxisSize'] == 'min' ? MainAxisSize.min : MainAxisSize.max,
-    children: spaced,
+    mainAxisAlignment:
+        p.getMainAxisAlignment('mainAxisAlignment', fallback: MainAxisAlignment.start),
+    crossAxisAlignment: p.getCrossAxisAlignment(
+      'crossAxisAlignment',
+      fallback: CrossAxisAlignment.center,
+    ),
+    mainAxisSize: p.getMainAxisSize('mainAxisSize'),
+    children: spacing > 0 ? _intersperse(children, SizedBox(width: spacing)) : children,
   );
 }
 
-List<Widget> _interleave(List<Widget> items, Widget separator) {
-  if (items.isEmpty) return items;
+List<Widget> _intersperse(List<Widget> items, Widget sep) {
+  if (items.length <= 1) return items;
   final result = <Widget>[];
   for (var i = 0; i < items.length; i++) {
     result.add(items[i]);
-    if (i < items.length - 1) result.add(separator);
+    if (i < items.length - 1) result.add(sep);
   }
   return result;
 }
 
 Widget _buildStack(SduiNode node, SduiBuildContext ctx) {
-  final props = node.props;
-  final children = ctx.childWidgets(node);
+  final p = SduiProps(node.props);
   return Stack(
-    alignment: _alignment(props['alignment'] as String?),
-    children: children,
+    alignment: p.getAlignment('alignment'),
+    children: ctx.childWidgets(node),
   );
 }
 
 Widget _buildButton(SduiNode node, SduiBuildContext ctx) {
-  final props = node.props;
-  final label = props['label'] as String? ?? '';
-  final variant = props['variant'] as String? ?? 'elevated';
+  final p = SduiProps(node.props);
+  final label = p.getString('label');
+  final variant = p.getString('variant', fallback: 'elevated');
+  final platform = p.getString('platform');
+  void onTap() => _fireAction('onTap', node, ctx);
 
-  void handleTap() => _fireAction('onTap', node, ctx);
+  if (platform == 'adaptive') {
+    // Fall through to Material on non-Apple platforms.
+  }
 
   final child = Text(label);
   return switch (variant) {
-    'outlined' => OutlinedButton(onPressed: handleTap, child: child),
-    'text' => TextButton(onPressed: handleTap, child: child),
-    _ => ElevatedButton(onPressed: handleTap, child: child),
+    'outlined' => OutlinedButton(onPressed: onTap, child: child),
+    'text' || 'flat' => TextButton(onPressed: onTap, child: child),
+    'filled' => FilledButton(onPressed: onTap, child: child),
+    'tonal' => FilledButton.tonal(onPressed: onTap, child: child),
+    _ => ElevatedButton(onPressed: onTap, child: child),
   };
 }
 
 Widget _buildIcon(SduiNode node, SduiBuildContext ctx) {
-  final props = node.props;
-  final name = props['name'] as String? ?? '';
-  final size = (props['size'] as num?)?.toDouble();
-  final color = _color(props['color']);
-  final iconData = _iconMap[name] ?? Icons.help_outline;
-  return Icon(iconData, size: size, color: color);
+  final p = SduiProps(node.props);
+  return Icon(
+    SduiIcons.fromName(p.getString('name')),
+    size: p.getDoubleOrNull('size'),
+    color: p.getColorOrNull('color'),
+  );
 }
 
 Widget _buildDivider(SduiNode node, SduiBuildContext ctx) {
-  final props = node.props;
+  final p = SduiProps(node.props);
   return Divider(
-    height: (props['height'] as num?)?.toDouble(),
-    thickness: (props['thickness'] as num?)?.toDouble(),
-    color: _color(props['color']),
+    height: p.getDoubleOrNull('height'),
+    thickness: p.getDoubleOrNull('thickness'),
+    color: p.getColorOrNull('color'),
   );
 }
 
 Widget _buildSpacer(SduiNode node, SduiBuildContext ctx) {
-  final props = node.props;
-  final w = (props['width'] as num?)?.toDouble();
-  final h = (props['height'] as num?)?.toDouble();
+  final p = SduiProps(node.props);
+  final w = p.getDoubleOrNull('width');
+  final h = p.getDoubleOrNull('height');
   if (w != null || h != null) return SizedBox(width: w, height: h);
-  return const Spacer();
+  return Spacer(flex: p.getInt('flex', fallback: 1));
 }
 
 Widget _buildGrid(SduiNode node, SduiBuildContext ctx) {
-  final props = node.props;
+  final p = SduiProps(node.props);
   final children = ctx.childWidgets(node);
-  final columns = (props['columns'] as num?)?.toInt() ?? 2;
-  final spacing = (props['spacing'] as num?)?.toDouble() ?? 8;
-  final ratio = (props['aspectRatio'] as num?)?.toDouble() ?? 1.0;
-
+  final columns = p.getInt('columns', fallback: 2);
+  final spacing = p.getDouble('spacing', fallback: 8);
+  final ratio = p.getDouble('aspectRatio', fallback: 1.0);
   return GridView.builder(
     shrinkWrap: true,
     physics: const NeverScrollableScrollPhysics(),
@@ -424,28 +298,31 @@ Widget _buildGrid(SduiNode node, SduiBuildContext ctx) {
 }
 
 Widget _buildList(SduiNode node, SduiBuildContext ctx) {
-  final props = node.props;
+  final p = SduiProps(node.props);
   final children = ctx.childWidgets(node);
-  final horizontal = props['scrollDirection'] == 'horizontal';
-
-  return ListView.builder(
-    shrinkWrap: true,
-    physics: const NeverScrollableScrollPhysics(),
-    scrollDirection: horizontal ? Axis.horizontal : Axis.vertical,
+  final axis = p.getAxis('scrollDirection');
+  final height = p.getDoubleOrNull('height');
+  Widget list = ListView.builder(
+    shrinkWrap: axis == Axis.vertical,
+    physics: const ClampingScrollPhysics(),
+    scrollDirection: axis,
     itemCount: children.length,
     itemBuilder: (_, i) => children[i],
   );
+  if (axis == Axis.horizontal && height != null) {
+    list = SizedBox(height: height, child: list);
+  }
+  return list;
 }
 
 Widget _buildCard(SduiNode node, SduiBuildContext ctx) {
-  final props = node.props;
+  final p = SduiProps(node.props);
   final children = ctx.childWidgets(node);
-  final radius = _borderRadius(props['borderRadius']);
-
+  final radius = p.getBorderRadius('borderRadius');
   return Card(
-    elevation: (props['elevation'] as num?)?.toDouble(),
-    color: _color(props['color']),
-    shape: radius != null
+    elevation: p.getDoubleOrNull('elevation'),
+    color: p.getColorOrNull('color'),
+    shape: radius != BorderRadius.zero
         ? RoundedRectangleBorder(borderRadius: radius)
         : null,
     child: children.isNotEmpty ? children.first : null,
@@ -453,9 +330,10 @@ Widget _buildCard(SduiNode node, SduiBuildContext ctx) {
 }
 
 Widget _buildPaddingWidget(SduiNode node, SduiBuildContext ctx) {
+  final p = SduiProps(node.props);
   final children = ctx.childWidgets(node);
   return Padding(
-    padding: _padding(node.props),
+    padding: p.getEdgeInsets('padding'),
     child: children.isNotEmpty ? children.first : const SizedBox.shrink(),
   );
 }
@@ -468,32 +346,138 @@ Widget _buildCenter(SduiNode node, SduiBuildContext ctx) {
 }
 
 Widget _buildExpanded(SduiNode node, SduiBuildContext ctx) {
-  final props = node.props;
-  final flex = (props['flex'] as num?)?.toInt() ?? 1;
+  final p = SduiProps(node.props);
   final children = ctx.childWidgets(node);
   return Expanded(
-    flex: flex,
+    flex: p.getInt('flex', fallback: 1),
     child: children.isNotEmpty ? children.first : const SizedBox.shrink(),
   );
 }
 
 Widget _buildVisibility(SduiNode node, SduiBuildContext ctx) {
-  final visible = node.props['visible'] as bool? ?? true;
+  final p = SduiProps(node.props);
   final children = ctx.childWidgets(node);
   return Visibility(
-    visible: visible,
+    visible: p.getBool('visible', fallback: true),
     child: children.isNotEmpty ? children.first : const SizedBox.shrink(),
   );
 }
 
 Widget _buildInkWell(SduiNode node, SduiBuildContext ctx) {
-  final props = node.props;
+  final p = SduiProps(node.props);
   final children = ctx.childWidgets(node);
-  final radius = _borderRadius(props['borderRadius']);
-
   return InkWell(
     onTap: () => _fireAction('onTap', node, ctx),
-    borderRadius: radius,
+    borderRadius: p.getBorderRadius('borderRadius'),
     child: children.isNotEmpty ? children.first : const SizedBox.shrink(),
+  );
+}
+
+Widget _buildSafeArea(SduiNode node, SduiBuildContext ctx) {
+  final p = SduiProps(node.props);
+  final children = ctx.childWidgets(node);
+  return SafeArea(
+    top: p.getBool('top', fallback: true),
+    bottom: p.getBool('bottom', fallback: true),
+    left: p.getBool('left', fallback: true),
+    right: p.getBool('right', fallback: true),
+    child: children.isNotEmpty ? children.first : const SizedBox.shrink(),
+  );
+}
+
+Widget _buildAspectRatio(SduiNode node, SduiBuildContext ctx) {
+  final p = SduiProps(node.props);
+  final children = ctx.childWidgets(node);
+  return AspectRatio(
+    aspectRatio: p.getDouble('ratio', fallback: 1.0),
+    child: children.isNotEmpty ? children.first : const SizedBox.shrink(),
+  );
+}
+
+Widget _buildFittedBox(SduiNode node, SduiBuildContext ctx) {
+  final p = SduiProps(node.props);
+  final children = ctx.childWidgets(node);
+  return FittedBox(
+    fit: p.getBoxFit('fit', fallback: BoxFit.contain),
+    child: children.isNotEmpty ? children.first : const SizedBox.shrink(),
+  );
+}
+
+Widget _buildClipRRect(SduiNode node, SduiBuildContext ctx) {
+  final p = SduiProps(node.props);
+  final children = ctx.childWidgets(node);
+  return ClipRRect(
+    borderRadius: p.getBorderRadius('borderRadius'),
+    child: children.isNotEmpty ? children.first : const SizedBox.shrink(),
+  );
+}
+
+Widget _buildOpacity(SduiNode node, SduiBuildContext ctx) {
+  final p = SduiProps(node.props);
+  final children = ctx.childWidgets(node);
+  final opacity = p.getDouble('opacity', fallback: 1.0).clamp(0.0, 1.0);
+  final duration = Duration(
+    milliseconds: p.getInt('duration', fallback: 300),
+  );
+  return AnimatedOpacity(
+    opacity: opacity,
+    duration: duration,
+    child: children.isNotEmpty ? children.first : const SizedBox.shrink(),
+  );
+}
+
+Widget _buildTransformScale(SduiNode node, SduiBuildContext ctx) {
+  final p = SduiProps(node.props);
+  final children = ctx.childWidgets(node);
+  return Transform.scale(
+    scale: p.getDouble('scale', fallback: 1.0),
+    child: children.isNotEmpty ? children.first : const SizedBox.shrink(),
+  );
+}
+
+Widget _buildHero(SduiNode node, SduiBuildContext ctx) {
+  final p = SduiProps(node.props);
+  final children = ctx.childWidgets(node);
+  return Hero(
+    tag: p.getString('tag', fallback: node.id),
+    child: children.isNotEmpty ? children.first : const SizedBox.shrink(),
+  );
+}
+
+Widget _buildPlaceholder(SduiNode node, SduiBuildContext ctx) {
+  final p = SduiProps(node.props);
+  return Placeholder(
+    color: p.getColor('color', fallback: Colors.grey),
+    strokeWidth: p.getDouble('strokeWidth', fallback: 2.0),
+    fallbackWidth: p.getDouble('width', fallback: 400),
+    fallbackHeight: p.getDouble('height', fallback: 400),
+  );
+}
+
+Widget _buildBadge(SduiNode node, SduiBuildContext ctx) {
+  final p = SduiProps(node.props);
+  final children = ctx.childWidgets(node);
+  final label = p.getStringOrNull('label');
+  return Badge(
+    label: label != null ? Text(label) : null,
+    child: children.isNotEmpty ? children.first : null,
+  );
+}
+
+Widget _buildChip(SduiNode node, SduiBuildContext ctx) {
+  final p = SduiProps(node.props);
+  final label = p.getString('label');
+  final hasAction = node.actions.containsKey('onTap');
+
+  if (hasAction) {
+    return ActionChip(
+      label: Text(label),
+      onPressed: () => _fireAction('onTap', node, ctx),
+    );
+  }
+
+  return Chip(
+    label: Text(label),
+    backgroundColor: p.getColorOrNull('backgroundColor'),
   );
 }

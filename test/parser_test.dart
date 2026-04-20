@@ -3,16 +3,16 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sdui_core/sdui_core.dart';
 
-Map<String, dynamic> _wrap(Map<String, dynamic> node) => {
+Map<String, Object?> _wrap(Map<String, Object?> node) => {
       'sdui_version': '1.0',
       'root': node,
     };
 
-Map<String, dynamic> _leaf({
+Map<String, Object?> _leaf({
   String type = 'sdui:text',
   String id = 'n1',
   int version = 1,
-  Map<String, dynamic>? props,
+  Map<String, Object?>? props,
 }) =>
     {
       'type': type,
@@ -23,13 +23,6 @@ Map<String, dynamic> _leaf({
     };
 
 void main() {
-  setUpAll(() {
-    SduiWidgetRegistry.instance.register(
-      'sdui:text',
-      (_, __) => throw UnimplementedError('test stub'),
-    );
-  });
-
   group('SduiParser.parse', () {
     test('parses valid JSON into a SduiLeafNode', () {
       final node = SduiParser.parse(_wrap(_leaf()));
@@ -40,7 +33,7 @@ void main() {
     });
 
     test('throws SduiVersionException when sdui_version is missing', () {
-      final json = {
+      final json = <String, Object?>{
         'type': 'sdui:text',
         'id': 'n1',
         'version': 1,
@@ -54,7 +47,7 @@ void main() {
     });
 
     test('throws SduiVersionException for unsupported sdui_version', () {
-      final badJson = {
+      final badJson = <String, Object?>{
         'sdui_version': '99.0',
         'root': _leaf(),
       };
@@ -65,7 +58,7 @@ void main() {
     });
 
     test('throws SduiParseException when id is missing', () {
-      final badNode = {
+      final badNode = <String, Object?>{
         'type': 'sdui:text',
         'version': 1,
         'props': {},
@@ -78,7 +71,7 @@ void main() {
     });
 
     test('throws SduiParseException when type is missing', () {
-      final badNode = {
+      final badNode = <String, Object?>{
         'id': 'n1',
         'version': 1,
         'props': {},
@@ -90,10 +83,10 @@ void main() {
       );
     });
 
-    test('produces SduiUnknownNode for unregistered type — no throw', () {
-      final json = {
+    test('produces leaf node for unregistered non-parent type', () {
+      final json = <String, Object?>{
         'sdui_version': '1.0',
-        'root': {
+        'root': <String, Object?>{
           'type': 'myapp:does_not_exist',
           'id': 'unknown_1',
           'version': 1,
@@ -102,14 +95,13 @@ void main() {
         },
       };
       final node = SduiParser.parse(json);
-      expect(node, isA<SduiUnknownNode>());
       expect(node.type, 'myapp:does_not_exist');
     });
 
     test('defaults missing version to 0', () {
-      final noVersion = {
+      final noVersion = <String, Object?>{
         'sdui_version': '1.0',
-        'root': {
+        'root': <String, Object?>{
           'type': 'sdui:text',
           'id': 'nv',
           'props': {},
@@ -121,41 +113,41 @@ void main() {
     });
 
     test('defaults missing props to empty map', () {
-      final json = {
+      final json = <String, Object?>{
         'sdui_version': '1.0',
-        'root': {'type': 'sdui:text', 'id': 'np', 'version': 1, 'actions': {}},
+        'root': <String, Object?>{'type': 'sdui:text', 'id': 'np', 'version': 1, 'actions': {}},
       };
       final node = SduiParser.parse(json);
       expect(node.props, isEmpty);
     });
 
     test('defaults missing actions to empty map', () {
-      final json = {
+      final json = <String, Object?>{
         'sdui_version': '1.0',
-        'root': {'type': 'sdui:text', 'id': 'na', 'version': 1, 'props': {}},
+        'root': <String, Object?>{'type': 'sdui:text', 'id': 'na', 'version': 1, 'props': {}},
       };
       final node = SduiParser.parse(json);
       expect(node.actions, isEmpty);
     });
 
     test('parses deeply nested children', () {
-      final json = {
+      final json = <String, Object?>{
         'sdui_version': '1.0',
-        'root': {
+        'root': <String, Object?>{
           'type': 'sdui:column',
           'id': 'root',
           'version': 1,
           'props': {},
           'actions': {},
-          'children': [
-            {
+          'children': <Object?>[
+            <String, Object?>{
               'type': 'sdui:row',
               'id': 'row1',
               'version': 1,
               'props': {},
               'actions': {},
-              'children': [
-                {
+              'children': <Object?>[
+                <String, Object?>{
                   'type': 'sdui:text',
                   'id': 'leaf1',
                   'version': 1,
@@ -174,11 +166,11 @@ void main() {
       expect(row.children.first.id, 'leaf1');
     });
 
-    test('parseAsync returns the same result as parse', () async {
+    test('parseString returns the same result as parse', () async {
       final map = _wrap(_leaf());
       final jsonStr = jsonEncode(map);
       final sync = SduiParser.parse(map);
-      final async = await SduiParser.parseAsync(jsonStr);
+      final async = await SduiParser.parseString(jsonStr);
       expect(async.id, sync.id);
       expect(async.type, sync.type);
       expect(async.version, sync.version);

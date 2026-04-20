@@ -1,4 +1,73 @@
 include: package:flutter_lints/flutter.yaml
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+analyzer:
+  errors:
+    missing_required_param: error
+    missing_return: error
+    invalid_assignment: error
+  exclude:
+    - '**/*.g.dart'
+    - '**/*.freezed.dart'
+    - 'build/**'
+    - 'test/golden/goldens/**'
+
+linter:
+  rules:
+    # Style
+    always_use_package_imports: true
+    avoid_dynamic_calls: true
+    cancel_subscriptions: true
+    close_sinks: true
+    comment_references: true
+    deprecated_consistency: true
+    directives_ordering: true
+    eol_at_end_of_file: true
+    missing_whitespace_between_adjacent_strings: true
+    no_adjacent_strings_in_list: true
+    prefer_asserts_with_message: true
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    prefer_final_fields: true
+    prefer_final_locals: true
+    sort_pub_dependencies: true
+    unnecessary_lambdas: true
+    unnecessary_statements: true
+    use_decorated_box: true
+    use_if_null_to_convert_nulls_to_bools: false
+
+    # Core quality
+    avoid_bool_literals_in_conditional_expressions: true
+    avoid_catches_without_on_clauses: true
+    avoid_catching_errors: true
+    avoid_empty_else: true
+    avoid_escaping_inner_quotes: true
+    avoid_field_initializers_in_const_classes: true
+    avoid_positional_boolean_parameters: true
+    avoid_print: true
+    avoid_redundant_argument_values: true
+    avoid_slow_async_io: true
+    avoid_type_to_string: true
+    avoid_unnecessary_containers: true
+    avoid_void_async: true
+    cast_nullable_to_non_nullable: true
+    combinators_ordering: true
+    do_not_use_environment: false
+    flutter_style_todos: true
+    join_return_with_assignment: true
+    leading_newlines_in_multiline_strings: true
+    library_annotations: true
+    no_leading_underscores_for_library_prefixes: true
+    noop_primitive_operations: true
+    only_throw_errors: true
+    prefer_expression_function_bodies: true
+    prefer_null_aware_method_calls: true
+    require_trailing_commas: true
+    sized_box_shrink_expand: true
+    unnecessary_await_in_return: true
+    unnecessary_breaks: true
+    unnecessary_null_checks: true
+    use_colored_box: true
+    use_enums: true
+    use_named_constants: true
+    use_string_in_part_of_directives: true
+    use_super_parameters: true
