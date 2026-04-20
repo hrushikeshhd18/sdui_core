@@ -75,7 +75,8 @@ Widget _buildCupertinoSwitch(SduiNode node, SduiBuildContext ctx) {
   return CupertinoSwitch(
     value: p.getBool('value'),
     onChanged: (_) => _fire('onChange', node, ctx),
-    activeTrackColor: p.getColorOrNull('activeColor') ?? CupertinoColors.activeGreen,
+    activeTrackColor:
+        p.getColorOrNull('activeColor') ?? CupertinoColors.activeGreen,
   );
 }
 
@@ -105,7 +106,8 @@ Widget _buildCupertinoDialog(SduiNode node, SduiBuildContext ctx) {
   final p = SduiProps(node.props);
   final children = ctx.childWidgets(node);
   return CupertinoAlertDialog(
-    title: p.getStringOrNull('title') != null ? Text(p.getString('title')) : null,
+    title:
+        p.getStringOrNull('title') != null ? Text(p.getString('title')) : null,
     content: children.isNotEmpty ? children.first : null,
   );
 }

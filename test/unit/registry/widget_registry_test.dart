@@ -123,7 +123,8 @@ void main() {
   });
 
   group('SduiBuildContext', () {
-    testWidgets('childWidgets returns empty list for unknown id', (tester) async {
+    testWidgets('childWidgets returns empty list for unknown id',
+        (tester) async {
       await tester.pumpWidget(
         Builder(
           builder: (ctx) {

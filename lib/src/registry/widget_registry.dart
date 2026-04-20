@@ -92,7 +92,8 @@ final class SduiWidgetRegistry {
   /// Creates a registry pre-loaded with all built-in `sdui:` widgets.
   ///
   /// This is the registry [SduiScope] uses when none is provided.
-  factory SduiWidgetRegistry.withDefaults() => SduiWidgetRegistry().._loadDefaults();
+  factory SduiWidgetRegistry.withDefaults() =>
+      SduiWidgetRegistry().._loadDefaults();
 
   /// The shared default registry used by [SduiScope] when no custom
   /// registry is supplied.

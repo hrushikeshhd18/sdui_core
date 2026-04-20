@@ -116,8 +116,7 @@ final class SduiUnknownWidgetException extends SduiException {
     String? message,
   }) : super(
           code: 'SDUI_004',
-          message:
-              message ?? 'No builder registered for widget type "$type".',
+          message: message ?? 'No builder registered for widget type "$type".',
           hint: 'Register a builder: '
               'SduiWidgetRegistry.defaults.register("$type", myBuilder);\n'
               'Or set a fallback: registry.setFallback(myFallbackBuilder).',

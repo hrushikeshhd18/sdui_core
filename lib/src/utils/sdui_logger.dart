@@ -45,7 +45,9 @@ abstract final class SduiLogger {
     if (!kDebugMode || !enabled) return;
     debugPrint('[$tag:WARN] $message');
     if (error != null) debugPrint('  error: $error');
-    if (stackTrace != null) debugPrintStack(stackTrace: stackTrace, maxFrames: 5);
+    if (stackTrace != null) {
+      debugPrintStack(stackTrace: stackTrace, maxFrames: 5);
+    }
   }
 
   /// Logs a fatal error with optional [error] and [stackTrace].
@@ -57,7 +59,9 @@ abstract final class SduiLogger {
     if (!kDebugMode || !enabled) return;
     debugPrint('[$tag:ERROR] $message');
     if (error != null) debugPrint('  error: $error');
-    if (stackTrace != null) debugPrintStack(stackTrace: stackTrace, maxFrames: 10);
+    if (stackTrace != null) {
+      debugPrintStack(stackTrace: stackTrace, maxFrames: 10);
+    }
   }
 
   static void _log(String category, String message, {Object? data}) {

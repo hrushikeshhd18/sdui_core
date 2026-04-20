@@ -115,7 +115,12 @@ void main() {
     test('defaults missing props to empty map', () {
       final json = <String, Object?>{
         'sdui_version': '1.0',
-        'root': <String, Object?>{'type': 'sdui:text', 'id': 'np', 'version': 1, 'actions': {}},
+        'root': <String, Object?>{
+          'type': 'sdui:text',
+          'id': 'np',
+          'version': 1,
+          'actions': {},
+        },
       };
       final node = SduiParser.parse(json);
       expect(node.props, isEmpty);
@@ -124,7 +129,12 @@ void main() {
     test('defaults missing actions to empty map', () {
       final json = <String, Object?>{
         'sdui_version': '1.0',
-        'root': <String, Object?>{'type': 'sdui:text', 'id': 'na', 'version': 1, 'props': {}},
+        'root': <String, Object?>{
+          'type': 'sdui:text',
+          'id': 'na',
+          'version': 1,
+          'props': {},
+        },
       };
       final node = SduiParser.parse(json);
       expect(node.actions, isEmpty);

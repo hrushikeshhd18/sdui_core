@@ -104,7 +104,9 @@ Widget _buildBottomNav(SduiNode node, SduiBuildContext ctx) {
   final items = p.getList<NavigationDestination>(
     'items',
     (v) {
-      if (v is! Map) return const NavigationDestination(icon: Icon(Icons.home), label: '');
+      if (v is! Map) {
+        return const NavigationDestination(icon: Icon(Icons.home), label: '');
+      }
       final m = SduiProps(Map<String, Object?>.from(v));
       return NavigationDestination(
         icon: Icon(SduiIcons.fromName(m.getString('icon', fallback: 'home'))),
@@ -124,7 +126,12 @@ Widget _buildNavRail(SduiNode node, SduiBuildContext ctx) {
   final items = p.getList<NavigationRailDestination>(
     'items',
     (v) {
-      if (v is! Map) return const NavigationRailDestination(icon: Icon(Icons.home), label: Text(''));
+      if (v is! Map) {
+        return const NavigationRailDestination(
+          icon: Icon(Icons.home),
+          label: Text(''),
+        );
+      }
       final m = SduiProps(Map<String, Object?>.from(v));
       return NavigationRailDestination(
         icon: Icon(SduiIcons.fromName(m.getString('icon', fallback: 'home'))),
@@ -182,7 +189,8 @@ Widget _buildTabBar(SduiNode node, SduiBuildContext ctx) {
     child: Column(
       children: [
         TabBar(tabs: tabs),
-        if (children.isNotEmpty) Expanded(child: TabBarView(children: children)),
+        if (children.isNotEmpty)
+          Expanded(child: TabBarView(children: children)),
       ],
     ),
   );
@@ -200,7 +208,8 @@ Widget _buildDialogPlaceholder(SduiNode node, SduiBuildContext ctx) {
   final p = SduiProps(node.props);
   final children = ctx.childWidgets(node);
   return AlertDialog(
-    title: p.getStringOrNull('title') != null ? Text(p.getString('title')) : null,
+    title:
+        p.getStringOrNull('title') != null ? Text(p.getString('title')) : null,
     content: children.isNotEmpty ? children.first : null,
   );
 }

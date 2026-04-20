@@ -115,7 +115,8 @@ SduiBuildContext testBuildContext(
 }) =>
     SduiBuildContext(
       flutterContext: flutterCtx,
-      registry: registry ?? (SduiWidgetRegistry()..registerAll(createCoreWidgets())),
+      registry:
+          registry ?? (SduiWidgetRegistry()..registerAll(createCoreWidgets())),
       actionRegistry: actionRegistry ?? SduiActionRegistry(),
       nodePath: 'root',
     );
@@ -127,7 +128,8 @@ Future<void> pumpSduiWidget(
   SduiWidgetRegistry? registry,
   SduiActionRegistry? actionRegistry,
 }) async {
-  final reg = registry ?? (SduiWidgetRegistry()..registerAll(createCoreWidgets()));
+  final reg =
+      registry ?? (SduiWidgetRegistry()..registerAll(createCoreWidgets()));
   final actions = actionRegistry ?? SduiActionRegistry();
 
   await tester.pumpWidget(

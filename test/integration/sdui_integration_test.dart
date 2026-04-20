@@ -51,7 +51,10 @@ void main() {
 
       final transport = MockSduiTransport(payload);
       final actionRegistry = SduiActionRegistry()
-        ..register('my_action', (_, __) async => const SduiActionResult.success());
+        ..register(
+          'my_action',
+          (_, __) async => const SduiActionResult.success(),
+        );
 
       await tester.pumpWidget(
         MaterialApp(
@@ -98,7 +101,8 @@ void main() {
       expect(find.text('Hello sdui_core'), findsOneWidget);
     });
 
-    testWidgets('differ detects update and updatedTree is returned', (tester) async {
+    testWidgets('differ detects update and updatedTree is returned',
+        (tester) async {
       const oldTree = SduiLeafNode(id: 'txt', type: 'sdui:text', version: 1);
       const newTree = SduiLeafNode(id: 'txt', type: 'sdui:text', version: 2);
 

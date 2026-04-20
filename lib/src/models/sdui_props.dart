@@ -82,7 +82,8 @@ final class SduiProps {
   /// like `0xFFFF0000`.
   ///
   /// Returns [fallback] if the key is missing or the value can't be parsed.
-  Color getColor(String key, {Color fallback = Colors.transparent}) => getColorOrNull(key) ?? fallback;
+  Color getColor(String key, {Color fallback = Colors.transparent}) =>
+      getColorOrNull(key) ?? fallback;
 
   /// Returns a [Color] for [key], or `null` if missing or unparseable.
   Color? getColorOrNull(String key) {
@@ -139,8 +140,8 @@ final class SduiProps {
   }
 
   static EdgeInsets? _edgeInsetsFromMap(Map<String, Object?> m) {
-    final all = (m['all'] as num?)?.toDouble() ??
-        (m['padding'] as num?)?.toDouble();
+    final all =
+        (m['all'] as num?)?.toDouble() ?? (m['padding'] as num?)?.toDouble();
     if (all != null) return EdgeInsets.all(all);
 
     final h = (m['horizontal'] as num?)?.toDouble();
@@ -188,18 +189,19 @@ final class SduiProps {
   ///
   /// Supported values: `center`, `topLeft`, `topCenter`, `topRight`,
   /// `centerLeft`, `centerRight`, `bottomLeft`, `bottomCenter`, `bottomRight`.
-  Alignment getAlignment(String key, {Alignment fallback = Alignment.center}) => switch (_map[key] as String? ?? '') {
-      'topLeft' => Alignment.topLeft,
-      'topCenter' => Alignment.topCenter,
-      'topRight' => Alignment.topRight,
-      'centerLeft' => Alignment.centerLeft,
-      'center' => Alignment.center,
-      'centerRight' => Alignment.centerRight,
-      'bottomLeft' => Alignment.bottomLeft,
-      'bottomCenter' => Alignment.bottomCenter,
-      'bottomRight' => Alignment.bottomRight,
-      _ => fallback,
-    };
+  Alignment getAlignment(String key, {Alignment fallback = Alignment.center}) =>
+      switch (_map[key] as String? ?? '') {
+        'topLeft' => Alignment.topLeft,
+        'topCenter' => Alignment.topCenter,
+        'topRight' => Alignment.topRight,
+        'centerLeft' => Alignment.centerLeft,
+        'center' => Alignment.center,
+        'centerRight' => Alignment.centerRight,
+        'bottomLeft' => Alignment.bottomLeft,
+        'bottomCenter' => Alignment.bottomCenter,
+        'bottomRight' => Alignment.bottomRight,
+        _ => fallback,
+      };
 
   // ---------------------------------------------------------------------------
   // Layout enums
@@ -259,9 +261,7 @@ final class SduiProps {
 
   /// Returns an [Axis] from a named string prop.
   Axis getAxis(String key, {Axis fallback = Axis.vertical}) =>
-      (_map[key] as String? ?? '') == 'horizontal'
-          ? Axis.horizontal
-          : fallback;
+      (_map[key] as String? ?? '') == 'horizontal' ? Axis.horizontal : fallback;
 
   /// Returns a [MainAxisSize] from a named string prop.
   MainAxisSize getMainAxisSize(

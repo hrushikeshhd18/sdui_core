@@ -85,7 +85,11 @@ abstract final class SduiRenderer {
 
   static Widget _renderUnknown(SduiUnknownNode node, SduiBuildContext ctx) {
     if (kDebugMode) {
-      return _wrapDebug(_DebugUnknownTile(node: node, path: ctx.nodePath), node, ctx);
+      return _wrapDebug(
+        _DebugUnknownTile(node: node, path: ctx.nodePath),
+        node,
+        ctx,
+      );
     }
     return const SizedBox.shrink();
   }
@@ -108,20 +112,20 @@ class _DebugUnknownTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(color: const Color(0xFFFF0000), width: 2),
-        color: const Color(0x22FF0000),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Text(
-          'Unknown SDUI widget: "${node.type}"\nPath: $path',
-          style: const TextStyle(
-            color: Color(0xFFFF0000),
-            fontSize: 11,
-            fontFamily: 'monospace',
+        decoration: BoxDecoration(
+          border: Border.all(color: const Color(0xFFFF0000), width: 2),
+          color: const Color(0x22FF0000),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Text(
+            'Unknown SDUI widget: "${node.type}"\nPath: $path',
+            style: const TextStyle(
+              color: Color(0xFFFF0000),
+              fontSize: 11,
+              fontFamily: 'monospace',
+            ),
           ),
         ),
-      ),
-    );
+      );
 }

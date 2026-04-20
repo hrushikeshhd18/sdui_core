@@ -101,7 +101,12 @@ void main() {
       expect(
         () => SduiParser.parse({
           'sdui_version': '1.0',
-          'root': {'type': 'sdui:text', 'version': 1, 'props': {}, 'actions': {}},
+          'root': {
+            'type': 'sdui:text',
+            'version': 1,
+            'props': {},
+            'actions': {},
+          },
         }),
         throwsA(isA<SduiParseException>()),
       );
@@ -128,7 +133,13 @@ void main() {
             'props': {},
             'actions': {},
             'children': [
-              {'type': 'sdui:text', 'id': 'col', 'version': 1, 'props': {'text': 'dup'}, 'actions': {}},
+              {
+                'type': 'sdui:text',
+                'id': 'col',
+                'version': 1,
+                'props': {'text': 'dup'},
+                'actions': {},
+              },
             ],
           },
         }),

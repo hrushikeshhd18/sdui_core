@@ -38,12 +38,14 @@ void main() {
 
     test('handles untyped payload Map via cast', () {
       final raw = <dynamic, dynamic>{'key': 'value'};
-      final action = SduiAction.fromJson({'type': 'custom', 'event': 'e', 'payload': raw});
+      final action =
+          SduiAction.fromJson({'type': 'custom', 'event': 'e', 'payload': raw});
       expect(action.payload['key'], 'value');
     });
 
     test('missing payload produces empty map', () {
-      final action = SduiAction.fromJson(const {'type': 'navigate', 'event': 'home'});
+      final action =
+          SduiAction.fromJson(const {'type': 'navigate', 'event': 'home'});
       expect(action.payload, isEmpty);
     });
   });

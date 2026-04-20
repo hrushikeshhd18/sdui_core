@@ -68,7 +68,8 @@ void main() {
       expect(find.text('Child B'), findsOneWidget);
     });
 
-    testWidgets('renders unknown node to error tile in debug mode', (tester) async {
+    testWidgets('renders unknown node to error tile in debug mode',
+        (tester) async {
       if (!kDebugMode) return;
 
       await tester.pumpWidget(
@@ -98,32 +99,26 @@ void main() {
 
   group('SduiKeyManager', () {
     test('shouldRebuild returns true when version changes', () {
-      const older =
-          SduiLeafNode(id: 'x', type: 'sdui:text', version: 1);
-      const newer =
-          SduiLeafNode(id: 'x', type: 'sdui:text', version: 2);
+      const older = SduiLeafNode(id: 'x', type: 'sdui:text', version: 1);
+      const newer = SduiLeafNode(id: 'x', type: 'sdui:text', version: 2);
       expect(SduiKeyManager.shouldRebuild(older, newer), isTrue);
     });
 
     test('shouldRebuild returns false when version is unchanged', () {
-      const a =
-          SduiLeafNode(id: 'x', type: 'sdui:text', version: 3);
-      const b =
-          SduiLeafNode(id: 'x', type: 'sdui:text', version: 3);
+      const a = SduiLeafNode(id: 'x', type: 'sdui:text', version: 3);
+      const b = SduiLeafNode(id: 'x', type: 'sdui:text', version: 3);
       expect(SduiKeyManager.shouldRebuild(a, b), isFalse);
     });
 
     test('keyFor includes id and version', () {
-      const node =
-          SduiLeafNode(id: 'hero', type: 'sdui:text', version: 5);
+      const node = SduiLeafNode(id: 'hero', type: 'sdui:text', version: 5);
       final key = SduiKeyManager.keyFor(node);
       expect(key.value, contains('hero'));
       expect(key.value, contains('v5'));
     });
 
     test('keyFor includes parentPath when provided', () {
-      const node =
-          SduiLeafNode(id: 'title', type: 'sdui:text', version: 1);
+      const node = SduiLeafNode(id: 'title', type: 'sdui:text', version: 1);
       final key = SduiKeyManager.keyFor(node, parentPath: 'root/hero');
       expect(key.value, contains('root/hero'));
     });

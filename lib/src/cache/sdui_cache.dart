@@ -68,8 +68,8 @@ final class SduiCache {
   }) async {
     final ts = _prefs.getInt('$_tsPrefix${_key(url)}');
     if (ts == null) return true;
-    final age = DateTime.now()
-        .difference(DateTime.fromMillisecondsSinceEpoch(ts));
+    final age =
+        DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(ts));
     return age > maxAge;
   }
 

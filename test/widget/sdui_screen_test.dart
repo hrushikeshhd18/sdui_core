@@ -12,11 +12,17 @@ final class _PendingTransport implements SduiTransport {
   final _completer = Completer<Map<String, Object?>>();
 
   @override
-  Future<Map<String, Object?>> fetch(String url, {Map<String, String>? headers}) =>
+  Future<Map<String, Object?>> fetch(
+    String url, {
+    Map<String, String>? headers,
+  }) =>
       _completer.future;
 
   @override
-  Stream<Map<String, Object?>> subscribe(String url, {Map<String, String>? headers}) =>
+  Stream<Map<String, Object?>> subscribe(
+    String url, {
+    Map<String, String>? headers,
+  }) =>
       Stream.fromFuture(_completer.future);
 
   @override
@@ -32,40 +38,45 @@ Widget _buildScreen({
   VoidCallback? onLoad,
   bool pullToRefresh = false,
   bool enableCache = false,
-}) => MaterialApp(
-    home: SduiScope(
-      registry: SduiWidgetRegistry()..registerAll(createCoreWidgets()),
-      child: Scaffold(
-        body: SduiScreen(
-          url: 'https://test.example.com/layout',
-          transport: transport,
-          enableCache: enableCache,
-          parseInIsolate: false,
-          loadingBuilder: loadingBuilder,
-          errorBuilder: errorBuilder,
-          emptyBuilder: emptyBuilder,
-          onError: onError,
-          onLoad: onLoad,
-          pullToRefresh: pullToRefresh,
+}) =>
+    MaterialApp(
+      home: SduiScope(
+        registry: SduiWidgetRegistry()..registerAll(createCoreWidgets()),
+        child: Scaffold(
+          body: SduiScreen(
+            url: 'https://test.example.com/layout',
+            transport: transport,
+            enableCache: enableCache,
+            parseInIsolate: false,
+            loadingBuilder: loadingBuilder,
+            errorBuilder: errorBuilder,
+            emptyBuilder: emptyBuilder,
+            onError: onError,
+            onLoad: onLoad,
+            pullToRefresh: pullToRefresh,
+          ),
         ),
       ),
-    ),
-  );
+    );
 
 void main() {
   group('SduiScreen — loading state', () {
-    testWidgets('shows default CircularProgressIndicator while loading', (tester) async {
+    testWidgets('shows default CircularProgressIndicator while loading',
+        (tester) async {
       await tester.pumpWidget(_buildScreen(transport: _PendingTransport()));
       await tester.pump();
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('shows custom loading widget when loadingBuilder provided', (tester) async {
-      await tester.pumpWidget(_buildScreen(
-        transport: _PendingTransport(),
-        loadingBuilder: (_) => const Text('Loading...'),
-      ),);
+    testWidgets('shows custom loading widget when loadingBuilder provided',
+        (tester) async {
+      await tester.pumpWidget(
+        _buildScreen(
+          transport: _PendingTransport(),
+          loadingBuilder: (_) => const Text('Loading...'),
+        ),
+      );
       await tester.pump();
 
       expect(find.text('Loading...'), findsOneWidget);
@@ -82,27 +93,33 @@ void main() {
       expect(find.text('Hello sdui_core'), findsOneWidget);
     });
 
-    testWidgets('calls onLoad callback after first successful render', (tester) async {
+    testWidgets('calls onLoad callback after first successful render',
+        (tester) async {
       var loadCalled = false;
       final transport = MockSduiTransport(kTextPayload);
 
-      await tester.pumpWidget(_buildScreen(
-        transport: transport,
-        onLoad: () => loadCalled = true,
-      ),);
+      await tester.pumpWidget(
+        _buildScreen(
+          transport: transport,
+          onLoad: () => loadCalled = true,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(loadCalled, isTrue);
     });
 
-    testWidgets('onLoad is not called multiple times on re-fetch', (tester) async {
+    testWidgets('onLoad is not called multiple times on re-fetch',
+        (tester) async {
       var loadCount = 0;
       final transport = MockSduiTransport(kTextPayload);
 
-      await tester.pumpWidget(_buildScreen(
-        transport: transport,
-        onLoad: () => loadCount++,
-      ),);
+      await tester.pumpWidget(
+        _buildScreen(
+          transport: transport,
+          onLoad: () => loadCount++,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(loadCount, 1);
@@ -110,7 +127,8 @@ void main() {
   });
 
   group('SduiScreen — error state', () {
-    testWidgets('shows default error widget on network failure', (tester) async {
+    testWidgets('shows default error widget on network failure',
+        (tester) async {
       final transport = ErrorTransport();
 
       await tester.pumpWidget(_buildScreen(transport: transport));
@@ -119,13 +137,16 @@ void main() {
       expect(find.byIcon(Icons.error_outline), findsOneWidget);
     });
 
-    testWidgets('shows custom error widget when errorBuilder provided', (tester) async {
+    testWidgets('shows custom error widget when errorBuilder provided',
+        (tester) async {
       final transport = ErrorTransport();
 
-      await tester.pumpWidget(_buildScreen(
-        transport: transport,
-        errorBuilder: (_, e) => Text('Error: ${e.code}'),
-      ),);
+      await tester.pumpWidget(
+        _buildScreen(
+          transport: transport,
+          errorBuilder: (_, e) => Text('Error: ${e.code}'),
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.textContaining('SDUI_003'), findsOneWidget);
@@ -135,10 +156,12 @@ void main() {
       SduiException? capturedError;
       final transport = ErrorTransport();
 
-      await tester.pumpWidget(_buildScreen(
-        transport: transport,
-        onError: (e) => capturedError = e,
-      ),);
+      await tester.pumpWidget(
+        _buildScreen(
+          transport: transport,
+          onError: (e) => capturedError = e,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(capturedError, isA<SduiNetworkException>());
@@ -149,16 +172,19 @@ void main() {
     testWidgets('shows empty builder for empty root node', (tester) async {
       final transport = MockSduiTransport(kMinimalPayload);
 
-      await tester.pumpWidget(_buildScreen(
-        transport: transport,
-        emptyBuilder: (_) => const Text('Nothing here'),
-      ),);
+      await tester.pumpWidget(
+        _buildScreen(
+          transport: transport,
+          emptyBuilder: (_) => const Text('Nothing here'),
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Nothing here'), findsOneWidget);
     });
 
-    testWidgets('shows SizedBox.shrink by default for empty state', (tester) async {
+    testWidgets('shows SizedBox.shrink by default for empty state',
+        (tester) async {
       final transport = MockSduiTransport(kMinimalPayload);
 
       await tester.pumpWidget(_buildScreen(transport: transport));
@@ -170,13 +196,16 @@ void main() {
   });
 
   group('SduiScreen — pull to refresh', () {
-    testWidgets('wraps content in RefreshIndicator when pullToRefresh is true', (tester) async {
+    testWidgets('wraps content in RefreshIndicator when pullToRefresh is true',
+        (tester) async {
       final transport = MockSduiTransport(kTextPayload);
 
-      await tester.pumpWidget(_buildScreen(
-        transport: transport,
-        pullToRefresh: true,
-      ),);
+      await tester.pumpWidget(
+        _buildScreen(
+          transport: transport,
+          pullToRefresh: true,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byType(RefreshIndicator), findsOneWidget);
@@ -184,7 +213,8 @@ void main() {
   });
 
   group('SduiScreen — transport is called', () {
-    testWidgets('transport.fetch is called exactly once on initial load', (tester) async {
+    testWidgets('transport.fetch is called exactly once on initial load',
+        (tester) async {
       final transport = MockSduiTransport(kTextPayload);
 
       await tester.pumpWidget(_buildScreen(transport: transport));

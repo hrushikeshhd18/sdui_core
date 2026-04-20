@@ -133,7 +133,9 @@ final class SduiActionRegistry {
   SduiActionRegistry withEventInterceptor(
     void Function(String, Map<String, Object?>)? onEvent,
   ) =>
-      onEvent == null ? this : _InterceptedRegistry(delegate: this, onEvent: onEvent);
+      onEvent == null
+          ? this
+          : _InterceptedRegistry(delegate: this, onEvent: onEvent);
 
   /// Dispatches [action] through the middleware chain and then to the handler.
   ///
@@ -165,7 +167,8 @@ final class SduiActionRegistry {
     // Build the middleware-wrapped execution.
     Future<SduiActionResult> execute() => _executeBuiltIn(action, ctx);
 
-    final chain = _middlewares.reversed.fold<Future<SduiActionResult> Function()>(
+    final chain =
+        _middlewares.reversed.fold<Future<SduiActionResult> Function()>(
       execute,
       (next, mw) => () => mw(action, ctx, next),
     );
@@ -179,14 +182,12 @@ final class SduiActionRegistry {
   ) async {
     switch (action.type) {
       case SduiActionType.navigate:
-        final route =
-            action.payload['route'] as String? ?? action.event;
+        final route = action.payload['route'] as String? ?? action.event;
         Navigator.of(ctx.flutterContext).pushNamed(route);
         return const SduiActionResult.success();
 
       case SduiActionType.openUrl:
-        final raw =
-            action.payload['url'] as String? ?? action.event;
+        final raw = action.payload['url'] as String? ?? action.event;
         final uri = Uri.tryParse(raw);
         if (uri != null) {
           await launchUrl(uri);

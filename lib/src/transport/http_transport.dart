@@ -61,9 +61,8 @@ final class HttpSduiTransport implements SduiTransport {
     Object? lastError;
     for (var attempt = 0; attempt <= retryCount; attempt++) {
       try {
-        final response = await _client
-            .get(uri, headers: merged)
-            .timeout(timeout);
+        final response =
+            await _client.get(uri, headers: merged).timeout(timeout);
 
         SduiLogger.network('$url → ${response.statusCode}');
 

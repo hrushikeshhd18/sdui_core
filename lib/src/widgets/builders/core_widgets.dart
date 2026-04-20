@@ -186,7 +186,9 @@ Widget _buildContainer(SduiNode node, SduiBuildContext ctx) {
     margin: p.getEdgeInsets('margin'),
     decoration: BoxDecoration(
       color: p.getColorOrNull('color'),
-      borderRadius: p.getBorderRadius('borderRadius',) ==
+      borderRadius: p.getBorderRadius(
+                'borderRadius',
+              ) ==
               BorderRadius.zero
           ? null
           : p.getBorderRadius('borderRadius'),
@@ -200,14 +202,15 @@ Widget _buildColumn(SduiNode node, SduiBuildContext ctx) {
   final children = ctx.childWidgets(node);
   final spacing = p.getDouble('spacing');
   return Column(
-    mainAxisAlignment:
-        p.getMainAxisAlignment('mainAxisAlignment'),
+    mainAxisAlignment: p.getMainAxisAlignment('mainAxisAlignment'),
     crossAxisAlignment: p.getCrossAxisAlignment(
       'crossAxisAlignment',
       fallback: CrossAxisAlignment.start,
     ),
     mainAxisSize: p.getMainAxisSize('mainAxisSize'),
-    children: spacing > 0 ? _intersperse(children, SizedBox(height: spacing)) : children,
+    children: spacing > 0
+        ? _intersperse(children, SizedBox(height: spacing))
+        : children,
   );
 }
 
@@ -216,13 +219,14 @@ Widget _buildRow(SduiNode node, SduiBuildContext ctx) {
   final children = ctx.childWidgets(node);
   final spacing = p.getDouble('spacing');
   return Row(
-    mainAxisAlignment:
-        p.getMainAxisAlignment('mainAxisAlignment'),
+    mainAxisAlignment: p.getMainAxisAlignment('mainAxisAlignment'),
     crossAxisAlignment: p.getCrossAxisAlignment(
       'crossAxisAlignment',
     ),
     mainAxisSize: p.getMainAxisSize('mainAxisSize'),
-    children: spacing > 0 ? _intersperse(children, SizedBox(width: spacing)) : children,
+    children: spacing > 0
+        ? _intersperse(children, SizedBox(width: spacing))
+        : children,
   );
 }
 

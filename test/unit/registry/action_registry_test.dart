@@ -36,7 +36,8 @@ void main() {
       expect(called, isTrue);
     });
 
-    testWidgets('throws SduiActionException for unregistered event', (tester) async {
+    testWidgets('throws SduiActionException for unregistered event',
+        (tester) async {
       final reg = SduiActionRegistry();
       await tester.pumpWidget(
         MaterialApp(
@@ -57,7 +58,8 @@ void main() {
       );
     });
 
-    testWidgets('onUnhandled callback fires for unknown events', (tester) async {
+    testWidgets('onUnhandled callback fires for unknown events',
+        (tester) async {
       String? capturedEvent;
       final reg = SduiActionRegistry(onUnhandled: (e) => capturedEvent = e);
 
@@ -83,7 +85,10 @@ void main() {
 
     test('hasHandler returns true for registered events', () {
       final reg = SduiActionRegistry()
-        ..register('buy_now', (_, __) async => const SduiActionResult.success());
+        ..register(
+          'buy_now',
+          (_, __) async => const SduiActionResult.success(),
+        );
       expect(reg.hasHandler('buy_now'), isTrue);
       expect(reg.hasHandler('unknown'), isFalse);
     });
@@ -138,8 +143,10 @@ void main() {
     testWidgets('middleware can short-circuit handler', (tester) async {
       var handlerCalled = false;
       final reg = SduiActionRegistry()
-        ..addMiddleware((action, ctx, next) async =>
-            const SduiActionResult.failure(message: 'blocked'),)
+        ..addMiddleware(
+          (action, ctx, next) async =>
+              const SduiActionResult.failure(message: 'blocked'),
+        )
         ..register('ev', (_, __) async {
           handlerCalled = true;
           return const SduiActionResult.success();

@@ -1,4 +1,5 @@
-import 'package:sdui_core/sdui_core.dart' show HttpSduiTransport, SduiNetworkException, WebSocketSduiTransport;
+import 'package:sdui_core/sdui_core.dart'
+    show HttpSduiTransport, SduiNetworkException, WebSocketSduiTransport;
 
 /// Abstract transport layer for fetching SDUI payloads.
 ///

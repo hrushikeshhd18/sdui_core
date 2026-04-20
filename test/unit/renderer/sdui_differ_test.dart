@@ -31,7 +31,8 @@ void main() {
       final result = SduiDiffer.diff(oldNode, newNode);
       expect(result.hasDiffs, isTrue);
       expect(
-        result.diffs.any((d) => d.type == SduiDiffType.updated && d.path == 'root'),
+        result.diffs
+            .any((d) => d.type == SduiDiffType.updated && d.path == 'root'),
         isTrue,
       );
     });
@@ -56,7 +57,8 @@ void main() {
 
   group('SduiDiffer — added and removed children', () {
     test('detects added child', () {
-      const oldParent = SduiParentNode(id: 'col', type: 'sdui:column', version: 1);
+      const oldParent =
+          SduiParentNode(id: 'col', type: 'sdui:column', version: 1);
       const newParent = SduiParentNode(
         id: 'col',
         type: 'sdui:column',
@@ -65,7 +67,11 @@ void main() {
       );
       final result = SduiDiffer.diff(oldParent, newParent);
       expect(result.hasDiffs, isTrue);
-      expect(result.diffs.any((d) => d.type == SduiDiffType.added && d.newNode?.id == 'a'), isTrue);
+      expect(
+        result.diffs
+            .any((d) => d.type == SduiDiffType.added && d.newNode?.id == 'a'),
+        isTrue,
+      );
     });
 
     test('detects removed child', () {
@@ -75,10 +81,16 @@ void main() {
         version: 1,
         children: [leaf1],
       );
-      const newParent = SduiParentNode(id: 'col', type: 'sdui:column', version: 1);
+      const newParent =
+          SduiParentNode(id: 'col', type: 'sdui:column', version: 1);
       final result = SduiDiffer.diff(oldParent, newParent);
       expect(result.hasDiffs, isTrue);
-      expect(result.diffs.any((d) => d.type == SduiDiffType.removed && d.oldNode?.id == 'a'), isTrue);
+      expect(
+        result.diffs.any(
+          (d) => d.type == SduiDiffType.removed && d.oldNode?.id == 'a',
+        ),
+        isTrue,
+      );
     });
 
     test('detects added and removed in same diff', () {

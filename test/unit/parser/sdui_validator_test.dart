@@ -12,7 +12,9 @@ void main() {
     });
 
     test('missing sdui_version emits MISSING_VERSION', () {
-      final result = SduiValidator.validate({'root': {'type': 'sdui:text', 'id': 'x'}});
+      final result = SduiValidator.validate({
+        'root': {'type': 'sdui:text', 'id': 'x'},
+      });
       expect(result.isValid, isFalse);
       expect(result.errors.any((e) => e.code == 'MISSING_VERSION'), isTrue);
     });
@@ -28,7 +30,10 @@ void main() {
 
     test('custom supported versions are respected', () {
       final result = SduiValidator.validate(
-        {'sdui_version': '2.0', 'root': {'type': 'sdui:text', 'id': 'x'}},
+        {
+          'sdui_version': '2.0',
+          'root': {'type': 'sdui:text', 'id': 'x'},
+        },
         supportedVersions: ['2.0'],
       );
       expect(result.isValid, isTrue);
@@ -57,7 +62,10 @@ void main() {
         'sdui_version': '1.0',
         'root': {'type': 'sdui:text', 'id': 'x', 'version': 'not_int'},
       });
-      expect(result.errors.any((e) => e.code == 'INVALID_VERSION_TYPE'), isTrue);
+      expect(
+        result.errors.any((e) => e.code == 'INVALID_VERSION_TYPE'),
+        isTrue,
+      );
     });
 
     test('id with spaces emits a warning', () {
@@ -131,7 +139,10 @@ void main() {
           },
         },
       });
-      expect(result.errors.any((e) => e.code == 'MISSING_ACTION_EVENT'), isTrue);
+      expect(
+        result.errors.any((e) => e.code == 'MISSING_ACTION_EVENT'),
+        isTrue,
+      );
     });
 
     test('valid action passes without errors', () {
@@ -161,7 +172,10 @@ void main() {
           'children': 'not_a_list',
         },
       });
-      expect(result.errors.any((e) => e.code == 'INVALID_CHILDREN_TYPE'), isTrue);
+      expect(
+        result.errors.any((e) => e.code == 'INVALID_CHILDREN_TYPE'),
+        isTrue,
+      );
     });
 
     test('non-object child emits INVALID_CHILD_TYPE', () {

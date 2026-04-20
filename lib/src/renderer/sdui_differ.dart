@@ -108,11 +108,13 @@ abstract final class SduiDiffer {
     List<SduiNodeDiff> diffs,
   ) {
     if (oldNode == null && newNode != null) {
-      diffs.add(SduiNodeDiff(
-        type: SduiDiffType.added,
-        path: path,
-        newNode: newNode,
-      ),);
+      diffs.add(
+        SduiNodeDiff(
+          type: SduiDiffType.added,
+          path: path,
+          newNode: newNode,
+        ),
+      );
       // Recursively mark all children as added.
       if (newNode is SduiParentNode) {
         for (final child in newNode.children) {
@@ -123,11 +125,13 @@ abstract final class SduiDiffer {
     }
 
     if (oldNode != null && newNode == null) {
-      diffs.add(SduiNodeDiff(
-        type: SduiDiffType.removed,
-        path: path,
-        oldNode: oldNode,
-      ),);
+      diffs.add(
+        SduiNodeDiff(
+          type: SduiDiffType.removed,
+          path: path,
+          oldNode: oldNode,
+        ),
+      );
       return;
     }
 
@@ -135,19 +139,23 @@ abstract final class SduiDiffer {
 
     // Version change → updated.
     if (oldNode.version != newNode.version) {
-      diffs.add(SduiNodeDiff(
-        type: SduiDiffType.updated,
-        path: path,
-        oldNode: oldNode,
-        newNode: newNode,
-      ),);
+      diffs.add(
+        SduiNodeDiff(
+          type: SduiDiffType.updated,
+          path: path,
+          oldNode: oldNode,
+          newNode: newNode,
+        ),
+      );
     } else {
-      diffs.add(SduiNodeDiff(
-        type: SduiDiffType.unchanged,
-        path: path,
-        oldNode: oldNode,
-        newNode: newNode,
-      ),);
+      diffs.add(
+        SduiNodeDiff(
+          type: SduiDiffType.unchanged,
+          path: path,
+          oldNode: oldNode,
+          newNode: newNode,
+        ),
+      );
     }
 
     // Recurse into children if both nodes are parents.
@@ -179,16 +187,22 @@ abstract final class SduiDiffer {
         // Check for move: same id, different position.
         final oldIndex = oldChildren.indexWhere((n) => n.id == newChild.id);
         if (oldIndex != i) {
-          diffs.add(SduiNodeDiff(
-            type: SduiDiffType.moved,
-            path: childPath,
-            oldNode: oldChild,
-            newNode: newChild,
-          ),);
+          diffs.add(
+            SduiNodeDiff(
+              type: SduiDiffType.moved,
+              path: childPath,
+              oldNode: oldChild,
+              newNode: newChild,
+            ),
+          );
           // Still recurse to catch nested updates.
           if (oldChild is SduiParentNode && newChild is SduiParentNode) {
             _diffChildren(
-                oldChild.children, newChild.children, childPath, diffs,);
+              oldChild.children,
+              newChild.children,
+              childPath,
+              diffs,
+            );
           }
         } else {
           _diffNode(oldChild, newChild, childPath, diffs);

@@ -236,9 +236,8 @@ class _SduiScreenState extends State<SduiScreen> {
         setState(() {
           _node = node;
           _error = null;
-          _state = _isEmpty(node)
-              ? SduiScreenState.empty
-              : SduiScreenState.success;
+          _state =
+              _isEmpty(node) ? SduiScreenState.empty : SduiScreenState.success;
         });
 
         if (!_firstLoadDone) {
@@ -247,7 +246,11 @@ class _SduiScreenState extends State<SduiScreen> {
         }
       }
     } on SduiException catch (e, st) {
-      SduiLogger.error('SduiScreen fetch failed for ${widget.url}', error: e, stackTrace: st);
+      SduiLogger.error(
+        'SduiScreen fetch failed for ${widget.url}',
+        error: e,
+        stackTrace: st,
+      );
       widget.onError?.call(e);
       if (mounted) {
         setState(() {
@@ -291,12 +294,10 @@ class _SduiScreenState extends State<SduiScreen> {
 
   @override
   Widget build(BuildContext context) => switch (_state) {
-        SduiScreenState.loading =>
-          widget.loadingBuilder?.call(context) ??
-              const Center(child: CircularProgressIndicator.adaptive()),
-        SduiScreenState.error =>
-          widget.errorBuilder?.call(context, _error!) ??
-              _DefaultErrorWidget(error: _error!),
+        SduiScreenState.loading => widget.loadingBuilder?.call(context) ??
+            const Center(child: CircularProgressIndicator.adaptive()),
+        SduiScreenState.error => widget.errorBuilder?.call(context, _error!) ??
+            _DefaultErrorWidget(error: _error!),
         SduiScreenState.empty =>
           widget.emptyBuilder?.call(context) ?? const SizedBox.shrink(),
         _ => _buildContent(context),
@@ -347,30 +348,30 @@ class _DefaultErrorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
-            const SizedBox(height: 12),
-            Text(
-              error.message,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '[${error.code}]',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: Colors.grey),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: Colors.red),
+              const SizedBox(height: 12),
+              Text(
+                error.message,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '[${error.code}]',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: Colors.grey),
+              ),
+            ],
+          ),
         ),
-      ),
-    );
+      );
 }
 
 class _StaleErrorBanner extends StatelessWidget {
@@ -379,23 +380,23 @@ class _StaleErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ColoredBox(
-      color: Colors.orange.shade100,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Row(
-          children: [
-            const Icon(Icons.warning_amber, color: Colors.orange, size: 16),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Showing cached content — refresh failed.',
-                style: Theme.of(context).textTheme.bodySmall,
+        color: Colors.orange.shade100,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              const Icon(Icons.warning_amber, color: Colors.orange, size: 16),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Showing cached content — refresh failed.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      );
 }
 
 // Avoids lint for unawaited futures we deliberately don't need to await.

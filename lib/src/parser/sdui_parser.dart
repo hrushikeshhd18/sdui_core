@@ -95,17 +95,18 @@ abstract final class SduiParser {
   /// Parses a JSON [jsonString] in a background [Isolate].
   ///
   /// Identical result to [parse] but never blocks the UI thread.
-  static Future<SduiNode> parseString(String jsonString) async => Isolate.run(() {
-      final decoded = jsonDecode(jsonString);
-      if (decoded is! Map) {
-        throw SduiParseException(
-          path: '<root>',
-          message: 'JSON root must be an object.',
-          code: 'INVALID_ROOT',
-        );
-      }
-      return parse(Map<String, Object?>.from(decoded));
-    });
+  static Future<SduiNode> parseString(String jsonString) async =>
+      Isolate.run(() {
+        final decoded = jsonDecode(jsonString);
+        if (decoded is! Map) {
+          throw SduiParseException(
+            path: '<root>',
+            message: 'JSON root must be an object.',
+            code: 'INVALID_ROOT',
+          );
+        }
+        return parse(Map<String, Object?>.from(decoded));
+      });
 
   /// Validates [json] without building a node tree.
   ///
@@ -132,7 +133,8 @@ abstract final class SduiParser {
       }
     }
 
-    final rawChildren = (json['children'] as List?)?.cast<dynamic>() ?? const [];
+    final rawChildren =
+        (json['children'] as List?)?.cast<dynamic>() ?? const [];
     final isParent = _knownParentTypes.contains(type) || rawChildren.isNotEmpty;
 
     if (isParent) {
