@@ -619,12 +619,6 @@ try {
 
 ---
 
-## Migration from `rfw`
-
-See [`doc/migration_from_rfw.md`](doc/migration_from_rfw.md) for a full concept-map, side-by-side code examples, and a feature comparison table.
-
----
-
 ## License
 
 MIT — see [LICENSE](LICENSE).
