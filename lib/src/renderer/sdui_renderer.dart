@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:sdui_core/src/models/sdui_node.dart';
 import 'package:sdui_core/src/registry/widget_registry.dart';
 import 'package:sdui_core/src/renderer/key_manager.dart';
+import 'package:sdui_core/src/widgets/sdui_debug_overlay.dart';
 
 /// Stateless recursive renderer: [SduiNode] → Flutter [Widget].
 ///
@@ -15,18 +16,50 @@ abstract final class SduiRenderer {
   ///
   /// [ctx] carries the ambient registries, the current tree path, and any
   /// pre-built child widgets.
-  static Widget render(SduiNode node, SduiBuildContext ctx) => switch (node) {
-        SduiUnknownNode() => _renderUnknown(node, ctx),
-        SduiLeafNode() => _renderLeaf(node, ctx),
-        SduiParentNode() => _renderParent(node, ctx),
-      };
+  static Widget render(SduiNode node, SduiBuildContext ctx) {
+    if (!_isVisible(node, ctx)) {
+      return SizedBox.shrink(
+        key: SduiKeyManager.keyFor(node, parentPath: ctx.nodePath),
+      );
+    }
+    return switch (node) {
+      SduiUnknownNode() => _renderUnknown(node, ctx),
+      SduiLeafNode() => _renderLeaf(node, ctx),
+      SduiParentNode() => _renderParent(node, ctx),
+    };
+  }
+
+  /// Evaluates the `visible_if` prop.
+  ///
+  /// Supported forms:
+  /// - Absent → always visible.
+  /// - `bool` literal → used directly.
+  /// - `"props.X"` string → resolves `node.props['X']` and coerces to bool.
+  /// - Other `String` → visible unless `""` or `"false"`.
+  static bool _isVisible(SduiNode node, SduiBuildContext ctx) {
+    final raw = node.props['visible_if'];
+    if (raw == null) return true;
+    if (raw is bool) return raw;
+    if (raw is String) {
+      if (raw.startsWith('props.')) {
+        final key = raw.substring(6);
+        final value = node.props[key];
+        if (value == null) return false;
+        if (value is bool) return value;
+        return value.toString().isNotEmpty && value.toString() != 'false';
+      }
+      return raw.isNotEmpty && raw != 'false';
+    }
+    return true;
+  }
 
   static Widget _renderLeaf(SduiLeafNode node, SduiBuildContext ctx) {
     final builder = ctx.registry.resolve(node.type, nodePath: ctx.nodePath);
-    return KeyedSubtree(
+    final built = KeyedSubtree(
       key: SduiKeyManager.keyFor(node, parentPath: ctx.nodePath),
       child: builder(node, ctx),
     );
+    return _wrapDebug(built, node, ctx);
   }
 
   static Widget _renderParent(SduiParentNode node, SduiBuildContext ctx) {
@@ -46,14 +79,24 @@ abstract final class SduiRenderer {
       child: builder(node, ctxWithKids),
     );
 
-    return isolate ? RepaintBoundary(child: built) : built;
+    final wrapped = isolate ? RepaintBoundary(child: built) : built;
+    return _wrapDebug(wrapped, node, ctx);
   }
 
   static Widget _renderUnknown(SduiUnknownNode node, SduiBuildContext ctx) {
     if (kDebugMode) {
-      return _DebugUnknownTile(node: node, path: ctx.nodePath);
+      return _wrapDebug(_DebugUnknownTile(node: node, path: ctx.nodePath), node, ctx);
     }
     return const SizedBox.shrink();
+  }
+
+  static Widget _wrapDebug(Widget child, SduiNode node, SduiBuildContext ctx) {
+    if (kReleaseMode || !SduiDebugOverlay.enabled) return child;
+    return SduiDebugOverlay(
+      node: node,
+      nodePath: ctx.nodePath,
+      child: child,
+    );
   }
 }
 

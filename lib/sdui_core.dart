@@ -50,8 +50,10 @@ export 'src/transport/ws_transport.dart';
 export 'src/cache/sdui_cache.dart';
 
 // Widgets (public API)
+export 'src/widgets/sdui_debug_overlay.dart';
 export 'src/widgets/sdui_scope.dart';
 export 'src/widgets/sdui_screen.dart';
+export 'src/widgets/sdui_theme.dart';
 export 'src/widgets/sdui_widget.dart';
 
 // Built-in widget builders

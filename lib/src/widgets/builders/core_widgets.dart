@@ -6,6 +6,7 @@ import 'package:sdui_core/src/models/sdui_props.dart';
 import 'package:sdui_core/src/registry/action_registry.dart';
 import 'package:sdui_core/src/registry/widget_registry.dart';
 import 'package:sdui_core/src/utils/sdui_icons.dart';
+import 'package:sdui_core/src/widgets/sdui_theme.dart';
 
 // ---------------------------------------------------------------------------
 // Public entry point
@@ -74,6 +75,21 @@ Future<void> _fireAction(
 
 TextStyle _textStyle(SduiProps p, BuildContext ctx) {
   final named = p.getString('style');
+
+  // Check SduiTheme first — allows server-controlled brand/custom text styles.
+  final sduiTheme = SduiTheme.maybeOf(ctx);
+  if (named.isNotEmpty && sduiTheme != null) {
+    final custom = sduiTheme.resolve(named);
+    if (custom != null) {
+      return custom.copyWith(
+        color: p.getColorOrNull('color'),
+        fontSize: p.getDoubleOrNull('fontSize'),
+        letterSpacing: p.getDoubleOrNull('letterSpacing'),
+        height: p.getDoubleOrNull('lineHeight'),
+      );
+    }
+  }
+
   final theme = Theme.of(ctx).textTheme;
   final base = switch (named) {
     'display1' || 'displayLarge' => theme.displayLarge ?? const TextStyle(),
