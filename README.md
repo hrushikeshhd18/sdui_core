@@ -7,6 +7,38 @@
 
 A production-grade **Server-Driven UI** engine for Flutter. Your backend describes the layout; `sdui_core` renders it as a real native widget tree — no WebView, no code generation, no App Store review for UI changes.
 
+<br>
+
+```mermaid
+%%{init: {'theme': 'default'}}%%
+graph TD
+    classDef flutter fill:#02569B,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef server fill:#353b48,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef sdui fill:#00b894,stroke:#fff,stroke-width:2px,color:#fff;
+
+    subgraph Backend
+        DB[(Database)] --> API[API Server]
+        API --> JSON[JSON Layout Engine]
+    end
+    
+    subgraph "sdui_core (Flutter Client)"
+        Net(SduiTransport) --> Parse(SduiParser)
+        Parse --> Cache[(SduiCache)]
+        Parse --> Diff{SduiDiffer}
+        Diff --> Reg(SduiWidgetRegistry)
+        Diff --> Theme(SduiTheme)
+        Reg --> UI[Native Widget Tree]
+        UI --> Actions(SduiActionRegistry)
+        Actions -.-> Net
+    end
+    
+    JSON == HTTP / WSS ==> Net
+    
+    class UI flutter
+    class API,JSON,DB server
+    class Parse,Diff,Cache,Reg,Theme,Actions sdui
+```
+
 ---
 
 ## Why server-driven UI?
@@ -19,6 +51,36 @@ Traditional                        Server-driven
 Backend API  ─► App code           Backend API  ─► JSON layout
 App release  ─► App Store          Deploy JSON  ─► Live instantly
 User updates ─► User sees change   All users    ─► See change now
+```
+
+<br>
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#f4f4f4', 'edgeLabelBackground':'#ffffff', 'tertiaryColor': '#f4f4f4'}}}%%
+flowchart LR
+    %% Traditional Flow
+    subgraph Traditional ["🐢 Traditional Native Flow"]
+        direction LR
+        A1[Code Change] --> B1[Wait: App Store]
+        B1 --> C1[Wait: Download]
+        C1 --> D1((User Sees UI))
+    end
+    
+    %% SDUI Flow
+    subgraph SDUI ["⚡ sdui_core Flow"]
+        direction LR
+        A2[Update JSON] --> B2{Deploy API}
+        B2 --> D2((All Users See Instantly))
+    end
+
+    style A1 fill:#ffeaa7,stroke:#fdcb6e,stroke-width:2px,color:#2d3436
+    style B1 fill:#ffeaa7,stroke:#fdcb6e,stroke-width:2px,color:#2d3436
+    style C1 fill:#ffeaa7,stroke:#fdcb6e,stroke-width:2px,color:#2d3436
+    style D1 fill:#fab1a0,stroke:#e17055,stroke-width:2px,color:#2d3436
+    
+    style A2 fill:#81ecec,stroke:#00cec9,stroke-width:2px,color:#2d3436
+    style B2 fill:#81ecec,stroke:#00cec9,stroke-width:2px,color:#2d3436
+    style D2 fill:#55efc4,stroke:#00b894,stroke-width:2px,color:#2d3436
 ```
 
 `sdui_core` is the Flutter side of this equation. It takes a JSON payload from your server and renders a fully native widget tree — every tap, animation, and gesture is handled in Flutter, not a browser.
@@ -177,6 +239,31 @@ class HomeScreen extends StatelessWidget {
 }
 ```
 
+<br>
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant Screen as SduiScreen
+    participant Cache as SduiCache
+    participant Server as Backend API
+    participant Diff as SduiDiffer
+    
+    User->>Screen: Opens App
+    Screen->>Cache: Check persistent cache
+    opt Has Cached Layout
+        Cache-->>Screen: Return cached JSON
+        Screen->>User: Render instant UI (No loading spinner)
+    end
+    
+    Screen->>Server: Fetch fresh layout (Background)
+    Server-->>Screen: Return updated JSON
+    Screen->>Diff: Run incremental differ
+    Diff-->>Screen: Only 2 nodes changed!
+    Screen->>User: Seamlessly update UI
+```
+
 ---
 
 ### 2. Registering custom widgets
@@ -317,6 +404,25 @@ SduiScreen(
   // No enableCache needed — the stream is always fresh
   enableCache: false,
 )
+```
+
+<br>
+
+```mermaid
+sequenceDiagram
+    participant App as App (SduiTransport)
+    participant WSS as WebSocket Server
+    participant Differ as SduiDiffer
+    participant UI as Flutter Widget Tree
+    
+    App->>WSS: Connect to Dashboard
+    WSS-->>App: Initial Complete JSON
+    App->>UI: Initial Render
+    
+    note right of WSS: Real-time Event Occurs
+    WSS->>App: Push Updated JSON
+    App->>Differ: Compare old vs new
+    Differ->>UI: Patch only updated Widgets
 ```
 
 The server pushes a full JSON payload on every change. `SduiDiffer` compares the incoming tree against the current one by `id + version` and rebuilds only the changed nodes — the rest of the widget tree is untouched.
