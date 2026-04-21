@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import 'package:sdui_core/src/models/sdui_node.dart';
@@ -155,18 +154,20 @@ Widget _buildImage(SduiNode node, SduiBuildContext ctx) {
   final url = p.getString('url');
   final radius = p.getBorderRadius('borderRadius');
 
-  Widget img = CachedNetworkImage(
-    imageUrl: url,
+  Widget img = Image.network(
+    url,
     width: p.getDoubleOrNull('width'),
     height: p.getDoubleOrNull('height'),
     fit: p.getBoxFit('fit'),
-    placeholder: (_, __) => const Center(
-      child: SizedBox.square(
-        dimension: 24,
-        child: CircularProgressIndicator.adaptive(strokeWidth: 2),
-      ),
-    ),
-    errorWidget: (_, __, ___) =>
+    loadingBuilder: (_, child, progress) => progress == null
+        ? child
+        : const Center(
+            child: SizedBox.square(
+              dimension: 24,
+              child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+            ),
+          ),
+    errorBuilder: (_, __, ___) =>
         const Icon(Icons.broken_image, color: Colors.grey),
   );
 

@@ -1,5 +1,13 @@
-## 0.2.0
+## 0.2.2
 
+* Replaced `cached_network_image` with Flutter's built-in `Image.network` to achieve full WASM compatibility. The `sdui:image` builder preserves the same loading spinner and broken-image error icon.
+* Removed `cached_network_image` from `pubspec.yaml`; no API changes for consumers.
+
+## 0.2.1
+
+* Documentation updates, branding improvements, and README overhaul for pub.dev structure.
+
+## 0.2.0
 ### Breaking changes
 
 * `SduiWidgetRegistry` and `SduiActionRegistry` are no longer singletons. The
