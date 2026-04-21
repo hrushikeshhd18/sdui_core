@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:sdui_core/sdui_core.dart';
 
@@ -272,8 +271,8 @@ Widget _bannerBuilder(SduiNode node, SduiBuildContext ctx) {
   return Stack(
     alignment: Alignment.bottomLeft,
     children: [
-      CachedNetworkImage(
-        imageUrl: imgUrl,
+      Image.network(
+        imgUrl,
         height: 200,
         width: double.infinity,
         fit: BoxFit.cover,
