@@ -228,7 +228,8 @@ final class SduiController extends ChangeNotifier {
         }
       } on Exception catch (_) {
         // Cache failure is non-fatal — fall through to network.
-      } catch (_) { // ignore: avoid_catches_without_on_clauses
+      } catch (_) {
+        // ignore: avoid_catches_without_on_clauses
         // Catches LateInitializationError when SduiCache.init() was not called.
       }
     }
@@ -332,13 +333,11 @@ final class SduiController extends ChangeNotifier {
 
   SduiNode _applyPatches(SduiNode node) {
     final patch = _patches[node.id];
-    final patched = patch != null
-        ? node.copyWith(props: {...node.props, ...patch})
-        : node;
+    final patched =
+        patch != null ? node.copyWith(props: {...node.props, ...patch}) : node;
     if (patched is SduiParentNode && patched.children.isNotEmpty) {
       return patched.copyWith(
-        children:
-            patched.children.map(_applyPatches).toList(growable: false),
+        children: patched.children.map(_applyPatches).toList(growable: false),
       );
     }
     return patched;
@@ -349,7 +348,8 @@ final class SduiController extends ChangeNotifier {
       await SduiCache.instance.set(url, map);
     } on Exception catch (_) {
       // Ignore cache write failures.
-    } catch (_) { // ignore: avoid_catches_without_on_clauses
+    } catch (_) {
+      // ignore: avoid_catches_without_on_clauses
       // Catches LateInitializationError when SduiCache.init() was not called.
     }
   }

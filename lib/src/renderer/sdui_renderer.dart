@@ -60,8 +60,7 @@ abstract final class SduiRenderer {
       }
       if (raw.startsWith('binding.')) {
         final key = raw.substring(8);
-        final value =
-            SduiBindings.maybeOf(ctx.flutterContext)?.resolve(key);
+        final value = SduiBindings.maybeOf(ctx.flutterContext)?.resolve(key);
         if (value == null) return false;
         if (value is bool) return value;
         return value.toString().isNotEmpty && value.toString() != 'false';

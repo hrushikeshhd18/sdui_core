@@ -227,9 +227,8 @@ class _SduiScreenState extends State<SduiScreen> {
 
   @override
   Widget build(BuildContext context) => switch (_controller.state) {
-        SduiScreenState.loading =>
-          widget.loadingBuilder?.call(context) ??
-              const Center(child: CircularProgressIndicator.adaptive()),
+        SduiScreenState.loading => widget.loadingBuilder?.call(context) ??
+            const Center(child: CircularProgressIndicator.adaptive()),
         SduiScreenState.error =>
           widget.errorBuilder?.call(context, _controller.error!) ??
               _DefaultErrorWidget(error: _controller.error!),
@@ -241,11 +240,9 @@ class _SduiScreenState extends State<SduiScreen> {
   Widget _buildContent(BuildContext context) {
     final scope = SduiScope.maybeOf(context);
     final registry = scope?.registry ?? SduiWidgetRegistry.defaults;
-    final actionRegistry =
-        scope?.actionRegistry ?? SduiActionRegistry.defaults;
+    final actionRegistry = scope?.actionRegistry ?? SduiActionRegistry.defaults;
 
-    final wrappedRegistry =
-        actionRegistry.withEventInterceptor(widget.onEvent);
+    final wrappedRegistry = actionRegistry.withEventInterceptor(widget.onEvent);
 
     final sdCtx = SduiBuildContext(
       flutterContext: context,

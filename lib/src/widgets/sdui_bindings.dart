@@ -104,7 +104,5 @@ class SduiBindings extends InheritedNotifier<SduiBindingsNotifier> {
   ///
   /// Widgets that call this method will rebuild when the notifier fires.
   static SduiBindingsNotifier? maybeOf(BuildContext context) =>
-      context
-          .dependOnInheritedWidgetOfExactType<SduiBindings>()
-          ?.notifier;
+      context.dependOnInheritedWidgetOfExactType<SduiBindings>()?.notifier;
 }
