@@ -3,7 +3,7 @@ description: >-
   A high-performance Server-Driven UI (SDUI) engine for Flutter. Render
   dynamic, state-aware layouts from JSON payloads at runtime — no App Store
   review needed for UI changes.
-version: 0.2.2
+version: 0.3.0
 homepage: https://github.com/hrushikeshhd18/sdui_core
 repository: https://github.com/hrushikeshhd18/sdui_core
 issue_tracker: https://github.com/hrushikeshhd18/sdui_core/issues

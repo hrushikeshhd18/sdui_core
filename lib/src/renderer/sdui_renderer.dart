@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:sdui_core/src/models/sdui_node.dart';
 import 'package:sdui_core/src/registry/widget_registry.dart';
 import 'package:sdui_core/src/renderer/key_manager.dart';
+import 'package:sdui_core/src/widgets/sdui_bindings.dart';
 import 'package:sdui_core/src/widgets/sdui_debug_overlay.dart';
 
 /// Stateless recursive renderer: [SduiNode] → Flutter [Widget].
@@ -35,7 +36,16 @@ abstract final class SduiRenderer {
   /// - Absent → always visible.
   /// - `bool` literal → used directly.
   /// - `"props.X"` string → resolves `node.props['X']` and coerces to bool.
-  /// - Other `String` → visible unless `""` or `"false"`.
+  /// - `"binding.X"` string → resolves value from [SduiBindings] in the tree.
+  ///   The node is hidden when the key is absent or resolves to `false`/`""`.
+  /// - Other non-empty `String` → visible (treats non-empty string as truthy).
+  ///
+  /// Example JSON:
+  /// ```json
+  /// { "visible_if": "binding.feature.newCheckout" }
+  /// { "visible_if": "binding.user.isPremium" }
+  /// { "visible_if": "props.inStock" }
+  /// ```
   static bool _isVisible(SduiNode node, SduiBuildContext ctx) {
     final raw = node.props['visible_if'];
     if (raw == null) return true;
@@ -44,6 +54,14 @@ abstract final class SduiRenderer {
       if (raw.startsWith('props.')) {
         final key = raw.substring(6);
         final value = node.props[key];
+        if (value == null) return false;
+        if (value is bool) return value;
+        return value.toString().isNotEmpty && value.toString() != 'false';
+      }
+      if (raw.startsWith('binding.')) {
+        final key = raw.substring(8);
+        final value =
+            SduiBindings.maybeOf(ctx.flutterContext)?.resolve(key);
         if (value == null) return false;
         if (value is bool) return value;
         return value.toString().isNotEmpty && value.toString() != 'false';

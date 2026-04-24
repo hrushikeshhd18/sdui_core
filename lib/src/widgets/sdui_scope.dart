@@ -6,15 +6,22 @@ import 'package:sdui_core/src/registry/widget_registry.dart';
 import 'package:sdui_core/src/widgets/builders/core_widgets.dart';
 import 'package:sdui_core/src/widgets/sdui_screen.dart' show SduiScreen;
 
-/// Propagates [SduiWidgetRegistry] and [SduiActionRegistry] down the tree.
+/// Propagates [SduiWidgetRegistry], [SduiActionRegistry], and an optional
+/// [navigatorKey] down the widget tree.
 ///
 /// Wrap your app or a subtree with [SduiScope] to give every [SduiScreen]
 /// access to the registries without prop-drilling:
 /// ```dart
+/// final _navigatorKey = GlobalKey<NavigatorState>();
+///
 /// SduiScope(
+///   navigatorKey: _navigatorKey,   // optional — enables safe async navigation
 ///   registry: SduiWidgetRegistry.withDefaults()
 ///     ..register('myapp:banner', myBannerBuilder),
-///   child: MaterialApp(home: SduiScreen(url: '...')),
+///   child: MaterialApp(
+///     navigatorKey: _navigatorKey,
+///     home: SduiScreen(url: '...'),
+///   ),
 /// )
 /// ```
 /// When [registry] or [actionRegistry] are omitted the built-in defaults
@@ -25,6 +32,7 @@ class SduiScope extends InheritedWidget {
     super.key,
     SduiWidgetRegistry? registry,
     SduiActionRegistry? actionRegistry,
+    this.navigatorKey,
     required super.child,
   })  : registry = registry ?? (_defaultRegistry ??= _buildDefault()),
         actionRegistry = actionRegistry ?? SduiActionRegistry.defaults;
@@ -34,6 +42,20 @@ class SduiScope extends InheritedWidget {
 
   /// The action registry exposed to all descendants.
   final SduiActionRegistry actionRegistry;
+
+  /// Optional [GlobalKey] for the app's root [NavigatorState].
+  ///
+  /// When provided, all SDUI `navigate` actions use this key instead of the
+  /// local [BuildContext], which prevents crashes when the context is unmounted
+  /// during a long-running async action handler:
+  ///
+  /// ```dart
+  /// // app setup
+  /// final _navKey = GlobalKey<NavigatorState>();
+  ///
+  /// SduiScope(navigatorKey: _navKey, child: MaterialApp(navigatorKey: _navKey, ...))
+  /// ```
+  final GlobalKey<NavigatorState>? navigatorKey;
 
   // Lazy singleton for the default registry — built once on first use.
   static SduiWidgetRegistry? _defaultRegistry;
@@ -64,5 +86,6 @@ class SduiScope extends InheritedWidget {
   @override
   bool updateShouldNotify(SduiScope oldWidget) =>
       registry != oldWidget.registry ||
-      actionRegistry != oldWidget.actionRegistry;
+      actionRegistry != oldWidget.actionRegistry ||
+      navigatorKey != oldWidget.navigatorKey;
 }

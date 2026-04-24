@@ -1,11 +1,25 @@
 import 'dart:convert';
-import 'dart:isolate';
+
+import 'package:flutter/foundation.dart';
 
 import 'package:sdui_core/src/exceptions/sdui_exceptions.dart';
 import 'package:sdui_core/src/models/sdui_action.dart';
 import 'package:sdui_core/src/models/sdui_node.dart';
 import 'package:sdui_core/src/parser/sdui_validator.dart';
 import 'package:sdui_core/src/utils/sdui_logger.dart';
+
+// Top-level entrypoint required by [compute] — closures are not allowed.
+SduiNode _parseStringTask(String jsonString) {
+  final decoded = jsonDecode(jsonString);
+  if (decoded is! Map) {
+    throw SduiParseException(
+      path: '<root>',
+      message: 'JSON root must be an object.',
+      code: 'INVALID_ROOT',
+    );
+  }
+  return SduiParser.parse(Map<String, Object?>.from(decoded));
+}
 
 /// Converts raw JSON into a typed [SduiNode] tree.
 ///
@@ -92,21 +106,12 @@ abstract final class SduiParser {
     return _parseNode(_toStringMap(rawRoot) ?? rawRoot, 'root');
   }
 
-  /// Parses a JSON [jsonString] in a background [Isolate].
+  /// Parses a JSON [jsonString] off the UI thread.
   ///
-  /// Identical result to [parse] but never blocks the UI thread.
-  static Future<SduiNode> parseString(String jsonString) async =>
-      Isolate.run(() {
-        final decoded = jsonDecode(jsonString);
-        if (decoded is! Map) {
-          throw SduiParseException(
-            path: '<root>',
-            message: 'JSON root must be an object.',
-            code: 'INVALID_ROOT',
-          );
-        }
-        return parse(Map<String, Object?>.from(decoded));
-      });
+  /// Uses [compute] so this works on all platforms including web / WASM.
+  /// Identical result to [parse] but never blocks the UI thread on native.
+  static Future<SduiNode> parseString(String jsonString) =>
+      compute(_parseStringTask, jsonString);
 
   /// Validates [json] without building a node tree.
   ///

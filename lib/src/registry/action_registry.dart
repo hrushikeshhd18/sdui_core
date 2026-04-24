@@ -14,16 +14,38 @@ final class SduiActionContext {
     required this.flutterContext,
     required this.nodeProps,
     required this.nodePath,
+    this.navigatorKey,
   });
 
   /// The ambient Flutter [BuildContext] at the time the action fired.
+  ///
+  /// Prefer [navigator] for navigation — it stays valid across async gaps.
   final BuildContext flutterContext;
+
+  /// Optional [GlobalKey] for the app's root [NavigatorState].
+  ///
+  /// Provide this via [SduiScope] to keep navigation safe across async
+  /// middleware and long-running action handlers:
+  /// ```dart
+  /// SduiScope(navigatorKey: myNavigatorKey, child: ...)
+  /// ```
+  final GlobalKey<NavigatorState>? navigatorKey;
 
   /// The `props` map of the node that triggered the action.
   final Map<String, Object?> nodeProps;
 
   /// Dot-separated path of the triggering node.
   final String nodePath;
+
+  /// Returns a [NavigatorState] safely, even after async gaps.
+  ///
+  /// Resolution order:
+  /// 1. [navigatorKey]`.currentState` — never goes stale.
+  /// 2. [Navigator.maybeOf]([flutterContext]) if the context is still mounted.
+  /// 3. `null` — caller should treat navigation as a no-op.
+  NavigatorState? get navigator =>
+      navigatorKey?.currentState ??
+      (flutterContext.mounted ? Navigator.maybeOf(flutterContext) : null);
 }
 
 /// Return value from an [SduiActionHandler].
@@ -183,7 +205,8 @@ final class SduiActionRegistry {
     switch (action.type) {
       case SduiActionType.navigate:
         final route = action.payload['route'] as String? ?? action.event;
-        Navigator.of(ctx.flutterContext).pushNamed(route);
+        // Use ctx.navigator to stay safe across async middleware gaps.
+        ctx.navigator?.pushNamed(route);
         return const SduiActionResult.success();
 
       case SduiActionType.openUrl:
@@ -207,9 +230,8 @@ final class SduiActionRegistry {
       case SduiActionType.showSnackbar:
         final msg = action.payload['message'] as String? ?? '';
         if (ctx.flutterContext.mounted) {
-          ScaffoldMessenger.of(ctx.flutterContext).showSnackBar(
-            SnackBar(content: Text(msg)),
-          );
+          ScaffoldMessenger.of(ctx.flutterContext)
+              .showSnackBar(SnackBar(content: Text(msg)));
         }
         return const SduiActionResult.success();
 

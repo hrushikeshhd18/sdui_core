@@ -36,6 +36,7 @@ Future<void> _fire(String key, SduiNode node, SduiBuildContext ctx) async {
     flutterContext: ctx.flutterContext,
     nodeProps: node.props,
     nodePath: ctx.nodePath,
+    navigatorKey: ctx.navigatorKey,
   );
   await ctx.actionRegistry.dispatch(action.event, action, actionCtx);
 }

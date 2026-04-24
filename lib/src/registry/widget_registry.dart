@@ -8,8 +8,9 @@ import 'package:sdui_core/src/widgets/sdui_scope.dart' show SduiScope;
 
 /// Context object passed to every [SduiWidgetBuilder].
 ///
-/// Carries both registries, the current tree path for diagnostics, and the
-/// pre-built child widgets so parent builders never need to re-enter the renderer.
+/// Carries both registries, the current tree path for diagnostics, the
+/// pre-built child widgets, and an optional [navigatorKey] for safe navigation
+/// across async action handlers.
 class SduiBuildContext {
   /// Creates a [SduiBuildContext].
   const SduiBuildContext({
@@ -17,6 +18,7 @@ class SduiBuildContext {
     required this.registry,
     required this.actionRegistry,
     required this.nodePath,
+    this.navigatorKey,
     Map<String, List<Widget>> prebuiltChildren = const {},
   }) : _prebuiltChildren = prebuiltChildren;
 
@@ -31,6 +33,12 @@ class SduiBuildContext {
 
   /// Dot-separated path of the current node, e.g. `"root/hero/title"`.
   final String nodePath;
+
+  /// Optional navigator key propagated from [SduiScope.navigatorKey].
+  ///
+  /// Widget builders pass this into [SduiActionContext] so navigation stays
+  /// safe even when the originating [BuildContext] has been unmounted.
+  final GlobalKey<NavigatorState>? navigatorKey;
 
   final Map<String, List<Widget>> _prebuiltChildren;
 
@@ -53,6 +61,7 @@ class SduiBuildContext {
         registry: registry,
         actionRegistry: actionRegistry,
         nodePath: '$nodePath/$segment',
+        navigatorKey: navigatorKey,
         prebuiltChildren: _prebuiltChildren,
       );
 
@@ -63,6 +72,7 @@ class SduiBuildContext {
         registry: registry,
         actionRegistry: actionRegistry,
         nodePath: nodePath,
+        navigatorKey: navigatorKey,
         prebuiltChildren: {..._prebuiltChildren, nodeId: children},
       );
 }

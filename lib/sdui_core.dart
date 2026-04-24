@@ -75,6 +75,8 @@ library sdui_core;
 
 // Cache
 export 'src/cache/sdui_cache.dart';
+// Controller — state machine + SduiScreenState enum
+export 'src/controller/sdui_controller.dart';
 // Exceptions
 export 'src/exceptions/sdui_exceptions.dart';
 // Extensions
@@ -106,8 +108,9 @@ export 'src/widgets/builders/core_widgets.dart';
 export 'src/widgets/builders/cupertino_widgets.dart';
 export 'src/widgets/builders/material_widgets.dart';
 // Widgets (public API)
+export 'src/widgets/sdui_bindings.dart';
 export 'src/widgets/sdui_debug_overlay.dart';
 export 'src/widgets/sdui_scope.dart';
-export 'src/widgets/sdui_screen.dart';
+export 'src/widgets/sdui_screen.dart' hide SduiScreenState;
 export 'src/widgets/sdui_theme.dart';
 export 'src/widgets/sdui_widget.dart';

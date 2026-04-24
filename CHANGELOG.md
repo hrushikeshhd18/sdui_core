@@ -1,3 +1,43 @@
+## 0.3.0
+
+### Architecture: state management overhaul
+
+**`SduiController` — new `ChangeNotifier` state machine**
+- Extracted the full fetch → cache → parse → diff lifecycle out of `_SduiScreenState` into a standalone `SduiController extends ChangeNotifier`.
+- Any state-management framework (Bloc, Provider, Riverpod, get_it, plain `setState`) can now observe or drive the screen without any boilerplate wiring.
+- New `SduiScreen.controlled(controller: myController)` named constructor for the controlled pattern; the standard `SduiScreen(url: '...')` constructor is unchanged.
+- `patchNode(nodeId, props)` — apply optimistic prop overrides to any node instantly, without a network round-trip. `clearPatch` / `clearAllPatches` restore server values.
+- `refresh()` — programmatic force-reload from anywhere.
+- `effectiveNode` — the patched tree that the screen renders, safe to observe.
+
+**`SduiBindings` + `SduiBindingsNotifier` — live state injection**
+- New `InheritedNotifier`-based widget that injects observable key/value state into the SDUI tree.
+- `visible_if` now supports a `"binding.X"` expression form in addition to the existing `"props.X"` form.
+- Update bindings from your state layer; all dependent nodes rebuild automatically — no server round-trip:
+  ```dart
+  SduiBindings(
+    notifier: SduiBindingsNotifier({'user.isPremium': false}),
+    child: SduiScope(child: ...),
+  )
+  // JSON: { "visible_if": "binding.user.isPremium" }
+  ```
+
+**`SduiScope.navigatorKey` — safe async navigation**
+- New `navigatorKey: GlobalKey<NavigatorState>?` on `SduiScope`.
+- Flows through `SduiBuildContext.navigatorKey` → `SduiActionContext.navigatorKey`.
+- `SduiActionContext.navigator` resolves `navigatorKey.currentState` first, falling back to `Navigator.maybeOf(flutterContext)` only when the context is still mounted.
+- All three widget builder families (core, material, cupertino) now propagate the key.
+
+**BuildContext safety fixes**
+- `navigate` action now uses `ctx.navigator?.pushNamed(route)` — safe across async middleware gaps, never crashes on unmounted contexts.
+- All built-in action handlers guard `ctx.flutterContext.mounted` before accessing `ScaffoldMessenger` or `Navigator`.
+
+## 0.2.3
+
+* **WASM fix:** replaced `dart:isolate` / `Isolate.run()` in `SduiParser.parseString` with Flutter's `compute()` from `flutter/foundation.dart`. `compute()` is WASM-compatible and still offloads JSON parsing to a background isolate on native platforms. This resolves the pub.dev "Package not compatible with runtime wasm" score penalty.
+* **README:** added use-case diagrams (e-commerce, A/B testing, feature flags, white-labelling) and integration recipes for `bloc`, `provider`, `riverpod`, `go_router`, `get_it`, `dio`, `freezed`, and `firebase_remote_config`.
+* **Diagrams:** added 8 new Mermaid-generated PNG assets — `lifecycle`, `usecase_ecommerce`, `usecase_ab_testing`, `usecase_feature_flags`, `integration_bloc`, `integration_state_mgmt`, `integration_go_router`, `integration_get_it`.
+
 ## 0.2.2
 
 * Replaced `cached_network_image` with Flutter's built-in `Image.network` to achieve full WASM compatibility. The `sdui:image` builder preserves the same loading spinner and broken-image error icon.

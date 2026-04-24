@@ -64,6 +64,7 @@ Future<void> _fireAction(
     flutterContext: ctx.flutterContext,
     nodeProps: node.props,
     nodePath: ctx.nodePath,
+    navigatorKey: ctx.navigatorKey,
   );
   await ctx.actionRegistry.dispatch(action.event, action, actionCtx);
 }

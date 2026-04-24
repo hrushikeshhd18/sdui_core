@@ -42,6 +42,7 @@ class SduiWidget extends StatelessWidget {
       registry: registry,
       actionRegistry: actionRegistry,
       nodePath: 'root',
+      navigatorKey: scope?.navigatorKey,
     );
 
     return SduiRenderer.render(node, sdCtx);

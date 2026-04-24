@@ -1,49 +1,34 @@
-import 'dart:async';
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 
-import 'package:sdui_core/src/cache/sdui_cache.dart';
+import 'package:sdui_core/src/controller/sdui_controller.dart';
 import 'package:sdui_core/src/exceptions/sdui_exceptions.dart';
-import 'package:sdui_core/src/models/sdui_node.dart';
-import 'package:sdui_core/src/parser/sdui_parser.dart';
 import 'package:sdui_core/src/registry/action_registry.dart';
 import 'package:sdui_core/src/registry/widget_registry.dart';
 import 'package:sdui_core/src/renderer/sdui_renderer.dart';
-import 'package:sdui_core/src/transport/http_transport.dart';
 import 'package:sdui_core/src/transport/sdui_transport.dart';
-import 'package:sdui_core/src/utils/sdui_logger.dart';
 import 'package:sdui_core/src/widgets/sdui_scope.dart';
 
-/// The 7 lifecycle states of [SduiScreen].
-enum SduiScreenState {
-  /// Initial load — no data, no cache. Shows [SduiScreen.loadingBuilder].
-  loading,
-
-  /// Initial load — showing stale cache while fresh data arrives.
-  loadingWithCache,
-
-  /// Successfully rendered. Shows the SDUI tree.
-  success,
-
-  /// Re-fetching in the background while still showing current data.
-  refreshing,
-
-  /// Fetch failed — no cache available. Shows [SduiScreen.errorBuilder].
-  error,
-
-  /// Fetch failed — showing stale cache with an error banner.
-  errorWithCache,
-
-  /// Payload loaded but the root node has no children.
-  empty,
-}
+export 'package:sdui_core/src/controller/sdui_controller.dart'
+    show SduiScreenState;
 
 /// Renders a server-driven UI screen from a JSON payload.
 ///
 /// **Minimum usage — 1 line:**
 /// ```dart
 /// SduiScreen(url: 'https://api.example.com/layouts/home')
+/// ```
+///
+/// **Controlled by an external [SduiController] (recommended for state
+/// management integration):**
+/// ```dart
+/// final controller = SduiController(url: 'https://api.example.com/home');
+///
+/// // BLoC example:
+/// BlocListener<CartBloc, CartState>(
+///   listener: (_, state) =>
+///       controller.patchNode('cart_badge', {'count': '${state.count}'}),
+///   child: SduiScreen.controlled(controller: controller),
+/// )
 /// ```
 ///
 /// **With live WebSocket updates:**
@@ -53,17 +38,10 @@ enum SduiScreenState {
 ///   transport: WebSocketSduiTransport(),
 /// )
 /// ```
-///
-/// **With auth headers and cache disabled:**
-/// ```dart
-/// SduiScreen(
-///   url: 'https://api.example.com/layouts/cart',
-///   headers: {'Authorization': 'Bearer $token'},
-///   enableCache: false,
-/// )
-/// ```
 class SduiScreen extends StatefulWidget {
-  /// Creates an [SduiScreen].
+  /// Standard constructor — [SduiScreen] manages its own [SduiController].
+  ///
+  /// All parameters are identical to previous versions of the package.
   const SduiScreen({
     super.key,
     required this.url,
@@ -82,12 +60,60 @@ class SduiScreen extends StatefulWidget {
     this.pullToRefresh = false,
     this.scrollController,
     this.physics,
-  });
+  }) : controller = null;
 
-  /// The URL of the JSON layout to render. For WebSocket, use `wss://`.
+  /// Controlled constructor — an external [SduiController] drives the screen.
+  ///
+  /// Use this when you need to integrate with Bloc, Provider, Riverpod or any
+  /// other state-management framework:
+  ///
+  /// ```dart
+  /// // Create once (e.g. in initState or a provider)
+  /// final controller = SduiController(
+  ///   url: 'https://api.example.com/layouts/home',
+  ///   headers: {'Authorization': 'Bearer $token'},
+  /// );
+  ///
+  /// // Drive from BLoC
+  /// BlocListener<AuthBloc, AuthState>(
+  ///   listener: (context, state) => state.isLoggedIn
+  ///       ? controller.refresh()
+  ///       : null,
+  ///   child: SduiScreen.controlled(controller: controller),
+  /// )
+  /// ```
+  SduiScreen.controlled({
+    super.key,
+    required this.controller,
+    this.loadingBuilder,
+    this.errorBuilder,
+    this.emptyBuilder,
+    this.onEvent,
+    this.pullToRefresh = false,
+    this.scrollController,
+    this.physics,
+  })  : url = controller!.url,
+        transport = null,
+        headers = null,
+        refreshInterval = null,
+        enableCache = true,
+        parseInIsolate = true,
+        onLoad = null,
+        onError = null,
+        onRefresh = null;
+
+  /// The URL of the JSON layout to render (for WebSocket use `wss://`).
   final String url;
 
-  /// Transport implementation. Defaults to [HttpSduiTransport].
+  /// Optional external controller.
+  ///
+  /// When set, the screen is a pure view: it renders the controller's state
+  /// and does not own the fetch lifecycle.
+  final SduiController? controller;
+
+  // ── Transport / fetch params (ignored when [controller] is set) ──────────
+
+  /// Transport implementation. Defaults to `HttpSduiTransport`.
   final SduiTransport? transport;
 
   /// HTTP headers added to every request (e.g. auth tokens).
@@ -102,6 +128,8 @@ class SduiScreen extends StatefulWidget {
   /// Whether to parse JSON in a background isolate. Default `true`.
   final bool parseInIsolate;
 
+  // ── View params (always applied) ─────────────────────────────────────────
+
   /// Replaces the default [CircularProgressIndicator] while loading.
   final WidgetBuilder? loadingBuilder;
 
@@ -111,9 +139,8 @@ class SduiScreen extends StatefulWidget {
   /// Shown when the root node has no children.
   final WidgetBuilder? emptyBuilder;
 
-  /// Called whenever any SDUI action fires, regardless of handler registration.
-  ///
-  /// Useful for analytics.
+  /// Fires for every action dispatched anywhere in the tree — use for
+  /// analytics.
   final void Function(String event, Map<String, Object?> payload)? onEvent;
 
   /// Called after the first successful render.
@@ -122,13 +149,13 @@ class SduiScreen extends StatefulWidget {
   /// Called every time a network error occurs.
   final void Function(SduiException)? onError;
 
-  /// Called when pull-to-refresh triggers a manual reload.
+  /// Called when a pull-to-refresh triggers a manual reload.
   final VoidCallback? onRefresh;
 
   /// Whether to wrap the content in a [RefreshIndicator].
   final bool pullToRefresh;
 
-  /// Optional [ScrollController] passed to the underlying scroll view.
+  /// Optional [ScrollController] for the underlying scroll view.
   final ScrollController? scrollController;
 
   /// Optional [ScrollPhysics] for the underlying scroll view.
@@ -139,165 +166,73 @@ class SduiScreen extends StatefulWidget {
 }
 
 class _SduiScreenState extends State<SduiScreen> {
-  SduiNode? _node;
-  SduiException? _error;
-  SduiScreenState _state = SduiScreenState.loading;
-  Timer? _refreshTimer;
-  StreamSubscription<Map<String, Object?>>? _subscription;
-  late SduiTransport _transport;
-  bool _firstLoadDone = false;
+  // When the controller is external we do NOT own its lifecycle.
+  late SduiController _controller;
+  bool _ownsController = false;
 
   @override
   void initState() {
     super.initState();
-    _transport = widget.transport ?? HttpSduiTransport();
-    _start();
-    _scheduleRefresh();
+    _attachController();
+    _controller.load();
   }
 
   @override
   void didUpdateWidget(SduiScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.url != widget.url) {
-      _cancel();
-      _transport = widget.transport ?? HttpSduiTransport();
-      _firstLoadDone = false;
-      _start();
-    }
-    if (oldWidget.refreshInterval != widget.refreshInterval) {
-      _refreshTimer?.cancel();
-      _scheduleRefresh();
+
+    final urlChanged = oldWidget.url != widget.url;
+    final controllerChanged = oldWidget.controller != widget.controller;
+
+    if (controllerChanged || (urlChanged && widget.controller == null)) {
+      _detachController();
+      _attachController();
+      _controller.load();
     }
   }
 
   @override
   void dispose() {
-    _cancel();
-    _refreshTimer?.cancel();
+    _detachController();
     super.dispose();
   }
 
-  void _cancel() {
-    _subscription?.cancel();
-    _subscription = null;
-    _transport.dispose();
-  }
-
-  void _scheduleRefresh() {
-    if (widget.refreshInterval == null) return;
-    _refreshTimer = Timer.periodic(widget.refreshInterval!, (_) => _fetch());
-  }
-
-  void _start() {
-    // Try cache first.
-    _loadFromCacheThenFetch();
-  }
-
-  Future<void> _loadFromCacheThenFetch() async {
-    if (widget.enableCache) {
-      try {
-        final cached = await SduiCache.instance.get(widget.url);
-        if (cached != null && mounted) {
-          final node = _parseMap(cached);
-          setState(() {
-            _node = node;
-            _state = SduiScreenState.loadingWithCache;
-          });
-        }
-      } on Exception {
-        // Cache failure is non-fatal — fall through to network.
-      }
-    }
-    await _fetch();
-  }
-
-  Future<void> _fetch() async {
-    if (!mounted) return;
-
-    if (_state == SduiScreenState.success ||
-        _state == SduiScreenState.loadingWithCache ||
-        _state == SduiScreenState.errorWithCache) {
-      if (mounted) setState(() => _state = SduiScreenState.refreshing);
-    }
-
-    try {
-      final map = await _transport.fetch(
-        widget.url,
+  void _attachController() {
+    if (widget.controller != null) {
+      _controller = widget.controller!;
+      _ownsController = false;
+    } else {
+      _controller = SduiController(
+        url: widget.url,
+        transport: widget.transport,
         headers: widget.headers,
+        enableCache: widget.enableCache,
+        parseInIsolate: widget.parseInIsolate,
+        refreshInterval: widget.refreshInterval,
+        onLoad: widget.onLoad,
+        onError: widget.onError,
+        onRefresh: widget.onRefresh,
       );
-
-      if (widget.enableCache) {
-        unawaited(SduiCache.instance.set(widget.url, map));
-      }
-
-      final node = await _parseNode(map);
-
-      if (mounted) {
-        setState(() {
-          _node = node;
-          _error = null;
-          _state =
-              _isEmpty(node) ? SduiScreenState.empty : SduiScreenState.success;
-        });
-
-        if (!_firstLoadDone) {
-          _firstLoadDone = true;
-          widget.onLoad?.call();
-        }
-      }
-    } on SduiException catch (e, st) {
-      SduiLogger.error(
-        'SduiScreen fetch failed for ${widget.url}',
-        error: e,
-        stackTrace: st,
-      );
-      widget.onError?.call(e);
-      if (mounted) {
-        setState(() {
-          _error = e;
-          _state = _node != null
-              ? SduiScreenState.errorWithCache
-              : SduiScreenState.error;
-        });
-      }
-    } on Exception catch (e, st) {
-      final ex = SduiNetworkException(url: widget.url, message: e.toString());
-      SduiLogger.error('SduiScreen unexpected error', error: e, stackTrace: st);
-      widget.onError?.call(ex);
-      if (mounted) {
-        setState(() {
-          _error = ex;
-          _state = _node != null
-              ? SduiScreenState.errorWithCache
-              : SduiScreenState.error;
-        });
-      }
+      _ownsController = true;
     }
+    _controller.addListener(_onControllerUpdate);
   }
 
-  SduiNode _parseMap(Map<String, Object?> map) => SduiParser.parse(map);
-
-  Future<SduiNode> _parseNode(Map<String, Object?> map) async {
-    if (widget.parseInIsolate) {
-      return SduiParser.parseString(jsonEncode(map));
-    }
-    return SduiParser.parse(map);
+  void _detachController() {
+    _controller.removeListener(_onControllerUpdate);
+    if (_ownsController) _controller.dispose();
   }
 
-  bool _isEmpty(SduiNode node) =>
-      node is SduiParentNode && node.children.isEmpty;
-
-  Future<void> _handleRefresh() async {
-    widget.onRefresh?.call();
-    await _fetch();
-  }
+  void _onControllerUpdate() => mounted ? setState(() {}) : null;
 
   @override
-  Widget build(BuildContext context) => switch (_state) {
-        SduiScreenState.loading => widget.loadingBuilder?.call(context) ??
-            const Center(child: CircularProgressIndicator.adaptive()),
-        SduiScreenState.error => widget.errorBuilder?.call(context, _error!) ??
-            _DefaultErrorWidget(error: _error!),
+  Widget build(BuildContext context) => switch (_controller.state) {
+        SduiScreenState.loading =>
+          widget.loadingBuilder?.call(context) ??
+              const Center(child: CircularProgressIndicator.adaptive()),
+        SduiScreenState.error =>
+          widget.errorBuilder?.call(context, _controller.error!) ??
+              _DefaultErrorWidget(error: _controller.error!),
         SduiScreenState.empty =>
           widget.emptyBuilder?.call(context) ?? const SizedBox.shrink(),
         _ => _buildContent(context),
@@ -306,26 +241,30 @@ class _SduiScreenState extends State<SduiScreen> {
   Widget _buildContent(BuildContext context) {
     final scope = SduiScope.maybeOf(context);
     final registry = scope?.registry ?? SduiWidgetRegistry.defaults;
-    final actionRegistry = scope?.actionRegistry ?? SduiActionRegistry.defaults;
+    final actionRegistry =
+        scope?.actionRegistry ?? SduiActionRegistry.defaults;
 
-    final wrappedRegistry = actionRegistry.withEventInterceptor(widget.onEvent);
+    final wrappedRegistry =
+        actionRegistry.withEventInterceptor(widget.onEvent);
 
     final sdCtx = SduiBuildContext(
       flutterContext: context,
       registry: registry,
       actionRegistry: wrappedRegistry,
       nodePath: 'root',
+      navigatorKey: scope?.navigatorKey,
     );
 
     Widget content = RepaintBoundary(
-      child: SduiRenderer.render(_node!, sdCtx),
+      child: SduiRenderer.render(_controller.effectiveNode!, sdCtx),
     );
 
-    if (_state == SduiScreenState.errorWithCache && _error != null) {
+    if (_controller.state == SduiScreenState.errorWithCache &&
+        _controller.error != null) {
       content = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _StaleErrorBanner(error: _error!),
+          _StaleErrorBanner(error: _controller.error!),
           Expanded(child: content),
         ],
       );
@@ -333,7 +272,7 @@ class _SduiScreenState extends State<SduiScreen> {
 
     if (widget.pullToRefresh) {
       content = RefreshIndicator.adaptive(
-        onRefresh: _handleRefresh,
+        onRefresh: _controller.refresh,
         child: content,
       );
     }
@@ -341,6 +280,8 @@ class _SduiScreenState extends State<SduiScreen> {
     return content;
   }
 }
+
+// ── Default error widget ─────────────────────────────────────────────────────
 
 class _DefaultErrorWidget extends StatelessWidget {
   const _DefaultErrorWidget({required this.error});
@@ -398,6 +339,3 @@ class _StaleErrorBanner extends StatelessWidget {
         ),
       );
 }
-
-// Avoids lint for unawaited futures we deliberately don't need to await.
-void unawaited(Future<void> future) {}
