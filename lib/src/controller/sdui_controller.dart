@@ -219,7 +219,7 @@ final class SduiController extends ChangeNotifier {
   }
 
   Future<void> _loadFromCacheThenFetch() async {
-    if (enableCache) {
+    if (enableCache && SduiCache.isInitialized) {
       try {
         final cached = await SduiCache.instance.get(url);
         if (cached != null && !_disposed) {
@@ -228,9 +228,6 @@ final class SduiController extends ChangeNotifier {
         }
       } on Exception catch (_) {
         // Cache failure is non-fatal — fall through to network.
-      } catch (_) {
-        // ignore: avoid_catches_without_on_clauses
-        // Catches LateInitializationError when SduiCache.init() was not called.
       }
     }
     await _fetch();
@@ -344,13 +341,11 @@ final class SduiController extends ChangeNotifier {
   }
 
   Future<void> _writeCache(Map<String, Object?> map) async {
+    if (!SduiCache.isInitialized) return;
     try {
       await SduiCache.instance.set(url, map);
     } on Exception catch (_) {
       // Ignore cache write failures.
-    } catch (_) {
-      // ignore: avoid_catches_without_on_clauses
-      // Catches LateInitializationError when SduiCache.init() was not called.
     }
   }
 }

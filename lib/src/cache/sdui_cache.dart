@@ -28,13 +28,18 @@ final class SduiCache {
 
   final SharedPreferences _prefs;
 
-  /// The global cache instance. Must be set before use via [init].
-  static late final SduiCache instance;
+  static SduiCache? _instance;
+
+  /// The global cache instance. Access only after calling [init].
+  static SduiCache get instance => _instance!;
+
+  /// Whether [init] has been called.
+  static bool get isInitialized => _instance != null;
 
   /// Initialises the cache and sets [instance].
   static Future<SduiCache> init() async {
     final prefs = await SharedPreferences.getInstance();
-    return instance = SduiCache._(prefs);
+    return _instance = SduiCache._(prefs);
   }
 
   /// Returns the cached payload for [url], or `null` if not cached.
