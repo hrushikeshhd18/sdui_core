@@ -49,10 +49,11 @@ jobs:
       - name: Run tests
         run: flutter test --coverage
 
-      - name: Upload coverage
-        uses: codecov/codecov-action@v4
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
         if: matrix.os == 'ubuntu-latest' && matrix.flutter == 'stable'
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage/lcov.info
           fail_ci_if_error: false
 
