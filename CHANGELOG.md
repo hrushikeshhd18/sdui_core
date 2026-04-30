@@ -1,3 +1,28 @@
+## 0.3.1
+
+### Bug fixes
+
+**`SduiWidgetRegistry` defaults were empty**
+- `SduiWidgetRegistry.withDefaults()` and `.defaults` returned empty registries because `_loadDefaults()` was a no-op.
+- Added `configureDefaultFactory(factory)` static method. `SduiScope` wires it on first build; `withDefaults()` now calls the factory correctly.
+- `configureDefaultFactory` *merges* builders into an already-accessed `defaults` instance, so custom widget registrations added before `SduiScope` is built are preserved.
+
+**`SduiScope` only auto-loaded core widgets**
+- `_buildDefault()` now registers core + Material 3 + Cupertino widgets via `configureDefaultFactory`.
+- No manual `registerAll(createCoreWidgets())` call is needed in `main()`.
+
+**`sdui:bottom_sheet` and `sdui:dialog` rendered inline**
+- Both were placeholder builders that rendered content inside the widget tree rather than as overlays.
+- Added `SduiOverlayCallback` typedef and `withOverlayCallback()` method to `SduiActionRegistry`.
+- `SduiScreen` injects a renderer-aware overlay handler — `show_bottom_sheet` triggers `showModalBottomSheet`, `show_dialog` triggers `showDialog`.
+- `dismiss_bottom_sheet` action now calls `ctx.navigator?.pop()` (was a no-op).
+- `sdui:bottom_sheet` widget renders a drag-handle header + children inside `SafeArea`. Supports `padding` prop.
+- `sdui:dialog` renders an `AlertDialog` with optional `title`, `confirmLabel`, and `cancelLabel` props.
+
+**Example app**
+- Removed redundant `SduiWidgetRegistry.defaults.registerAll(createCoreWidgets())` call from `main()`.
+- Refactored to use `SduiScope(registry: SduiWidgetRegistry.withDefaults()..register(...))` — the canonical pattern.
+
 ## 0.3.0
 
 ### Architecture: state management overhaul
