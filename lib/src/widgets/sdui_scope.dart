@@ -4,6 +4,8 @@ import 'package:sdui_core/sdui_core.dart' show SduiScreen;
 import 'package:sdui_core/src/registry/action_registry.dart';
 import 'package:sdui_core/src/registry/widget_registry.dart';
 import 'package:sdui_core/src/widgets/builders/core_widgets.dart';
+import 'package:sdui_core/src/widgets/builders/cupertino_widgets.dart';
+import 'package:sdui_core/src/widgets/builders/material_widgets.dart';
 import 'package:sdui_core/src/widgets/sdui_screen.dart' show SduiScreen;
 
 /// Propagates [SduiWidgetRegistry], [SduiActionRegistry], and an optional
@@ -60,8 +62,16 @@ class SduiScope extends InheritedWidget {
   // Lazy singleton for the default registry — built once on first use.
   static SduiWidgetRegistry? _defaultRegistry;
 
-  static SduiWidgetRegistry _buildDefault() =>
-      SduiWidgetRegistry()..registerAll(createCoreWidgets());
+  static SduiWidgetRegistry _buildDefault() {
+    SduiWidgetRegistry.configureDefaultFactory(
+      () => {
+        ...createCoreWidgets(),
+        ...createMaterialWidgets(),
+        ...createCupertinoWidgets(),
+      },
+    );
+    return SduiWidgetRegistry.withDefaults();
+  }
 
   /// Returns the nearest [SduiScope] ancestor.
   ///

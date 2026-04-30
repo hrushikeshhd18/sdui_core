@@ -101,7 +101,7 @@ void main() async {
 }
 ```
 
-`SduiScope` exposes the default registries (28 core widgets pre-registered) to the entire widget tree.  
+`SduiScope` exposes the default registries to the entire widget tree — all core, Material 3, and Cupertino widgets are pre-registered automatically.  
 `SduiScreen` runs the full fetch → validate → parse → cache → diff → render lifecycle automatically.
 
 ---
@@ -1192,11 +1192,20 @@ expect(events, contains('open_sale'));
 
 ### Material 3 — `createMaterialWidgets()`
 
-`sdui:list_tile` · `sdui:switch_tile` · `sdui:progress` · `sdui:fab` · `sdui:bottom_nav` · `sdui:nav_rail` · `sdui:drawer` · `sdui:app_bar` · `sdui:search_bar` · `sdui:tab_bar` · `sdui:bottom_sheet` · `sdui:dialog`
+`sdui:list_tile` · `sdui:switch_tile` · `sdui:progress` · `sdui:fab` · `sdui:bottom_nav` · `sdui:nav_rail` · `sdui:drawer` · `sdui:app_bar` · `sdui:search_bar` · `sdui:tab_bar`
+
+| Type | Role | Key props |
+|---|---|---|
+| `sdui:bottom_sheet` | Content container for `show_bottom_sheet` overlays | `padding` |
+| `sdui:dialog` | Content container for `show_dialog` overlays | `title`, `confirmLabel`, `cancelLabel` |
+
+> `sdui:bottom_sheet` and `sdui:dialog` are **content containers**, not standalone widgets. Trigger them via the `show_bottom_sheet` / `show_dialog` action types — see [Built-in actions](#built-in-actions).
 
 ### Cupertino — `createCupertinoWidgets()`
 
 `sdui:cupertino_button` · `sdui:cupertino_nav_bar` · `sdui:cupertino_list_tile` · `sdui:cupertino_switch` · `sdui:cupertino_slider` · `sdui:cupertino_activity` · `sdui:cupertino_dialog`
+
+> All three widget sets are registered automatically by `SduiScope`. Pass a custom `registry` to `SduiScope` only when you need to add or override builders.
 
 ---
 
@@ -1208,7 +1217,87 @@ expect(events, contains('open_sale'));
 | `open_url` | `launchUrl` | `url` |
 | `show_snackbar` | `ScaffoldMessenger.showSnackBar` | `message` |
 | `copy_to_clipboard` | `Clipboard.setData` | `text` |
+| `show_bottom_sheet` | `showModalBottomSheet` with a rendered SDUI node | `content` (node map) |
+| `show_dialog` | `showDialog` with a rendered SDUI node | `content` (node map) |
+| `dismiss_bottom_sheet` | Pops the current route (`Navigator.pop`) | — |
 | `dispatch` | Calls a registered Dart handler | _(handler-defined)_ |
+
+### Overlay actions — show_bottom_sheet / show_dialog
+
+Pass the sheet or dialog content as a full node map in `payload.content`. Use `sdui:bottom_sheet` or `sdui:dialog` as the root type to get built-in Material styling:
+
+```json
+{
+  "type": "sdui:button",
+  "id": "filter_btn",
+  "version": 1,
+  "props": { "label": "Filter", "variant": "outlined" },
+  "actions": {
+    "onTap": {
+      "type": "show_bottom_sheet",
+      "event": "open_filters",
+      "payload": {
+        "content": {
+          "type": "sdui:bottom_sheet",
+          "id": "filter_sheet",
+          "version": 1,
+          "props": {},
+          "actions": {},
+          "children": [
+            {
+              "type": "sdui:text",
+              "id": "sheet_title",
+              "version": 1,
+              "props": { "text": "Filter by category", "style": "h3" },
+              "actions": {}
+            },
+            {
+              "type": "sdui:button",
+              "id": "close_btn",
+              "version": 1,
+              "props": { "label": "Done" },
+              "actions": {
+                "onTap": { "type": "dismiss_bottom_sheet", "event": "close_filters", "payload": {} }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Dialog with confirm / cancel:
+
+```json
+{
+  "type": "show_dialog",
+  "event": "confirm_delete",
+  "payload": {
+    "content": {
+      "type": "sdui:dialog",
+      "id": "confirm_dialog",
+      "version": 1,
+      "props": {
+        "title": "Delete item?",
+        "confirmLabel": "Delete",
+        "cancelLabel": "Cancel"
+      },
+      "actions": {},
+      "children": [
+        {
+          "type": "sdui:text",
+          "id": "dialog_body",
+          "version": 1,
+          "props": { "text": "This action cannot be undone." },
+          "actions": {}
+        }
+      ]
+    }
+  }
+}
+```
 
 ---
 

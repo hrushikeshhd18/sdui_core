@@ -105,19 +105,46 @@ final class SduiWidgetRegistry {
   factory SduiWidgetRegistry.withDefaults() =>
       SduiWidgetRegistry().._loadDefaults();
 
-  /// The shared default registry used by [SduiScope] when no custom
-  /// registry is supplied.
-  static final SduiWidgetRegistry defaults = SduiWidgetRegistry.withDefaults();
+  /// The shared default registry pre-loaded with all built-in widgets.
+  ///
+  /// Populated lazily on first access. [SduiScope] wires the factory via
+  /// [configureDefaultFactory] before the first render, so this is always
+  /// non-empty in normal app usage.
+  static SduiWidgetRegistry get defaults =>
+      _defaults ??= SduiWidgetRegistry.withDefaults();
+
+  // Backing store for [defaults]; reset by [configureDefaultFactory].
+  static SduiWidgetRegistry? _defaults;
+
+  // Factory set by [configureDefaultFactory]. Starts as a no-op so early
+  // accesses to [defaults] return an empty (safe) registry rather than crashing.
+  static Map<String, SduiWidgetBuilder> Function() _defaultsFactory =
+      () => const {};
+
+  /// Wires the builder factory used by `withDefaults` and [defaults].
+  ///
+  /// Called once by [SduiScope] at app start to register core + Material
+  /// widgets. Invalidates the cached [defaults] so the next access rebuilds
+  /// with the new factory.
+  ///
+  /// You should not call this directly — pass a custom registry to [SduiScope]
+  /// instead.
+  static void configureDefaultFactory(
+    Map<String, SduiWidgetBuilder> Function() factory,
+  ) {
+    _defaultsFactory = factory;
+    // If defaults has already been accessed (e.g. app registered custom widgets
+    // on it before SduiScope was built), merge the factory builders in rather
+    // than discarding the instance — preserves those custom registrations.
+    // If defaults hasn't been accessed yet, the factory is picked up on first access.
+    _defaults?.registerAll(factory());
+  }
 
   final Map<String, SduiWidgetBuilder> _builders = {};
   final Map<String, SduiWidgetBuilder> _wildcards = {};
   SduiWidgetBuilder? _fallback;
 
-  void _loadDefaults() {
-    // Forward-declaration pattern: import is done at call-site to avoid a
-    // circular dep between registry ↔ core_widgets.
-    // core_widgets.dart calls registerAll(createCoreWidgets()) externally.
-  }
+  void _loadDefaults() => registerAll(_defaultsFactory());
 
   /// Registers [builder] for the exact [type] string.
   ///

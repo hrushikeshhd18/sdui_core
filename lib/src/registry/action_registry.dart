@@ -85,6 +85,14 @@ typedef SduiActionHandler = Future<SduiActionResult> Function(
   SduiActionContext ctx,
 );
 
+/// Callback injected by [SduiScreen] to render overlay actions
+/// (show_bottom_sheet, show_dialog) without creating a circular import
+/// between the action registry and the renderer.
+typedef SduiOverlayCallback = Future<SduiActionResult> Function(
+  SduiAction action,
+  SduiActionContext ctx,
+);
+
 /// Middleware that intercepts every action before it reaches the handler.
 ///
 /// Call [next] to proceed to the next middleware or the final handler.
@@ -158,6 +166,14 @@ final class SduiActionRegistry {
       onEvent == null
           ? this
           : _InterceptedRegistry(delegate: this, onEvent: onEvent);
+
+  /// Returns a new registry that intercepts overlay actions
+  /// (show_bottom_sheet, show_dialog) and routes them through [callback].
+  ///
+  /// [SduiScreen] uses this to inject a renderer-aware overlay handler without
+  /// creating a circular import between the action registry and the renderer.
+  SduiActionRegistry withOverlayCallback(SduiOverlayCallback callback) =>
+      _OverlayRegistry(delegate: this, callback: callback);
 
   /// Dispatches [action] through the middleware chain and then to the handler.
   ///
@@ -235,12 +251,16 @@ final class SduiActionRegistry {
         }
         return const SduiActionResult.success();
 
-      case SduiActionType.showBottomSheet:
       case SduiActionType.dismissBottomSheet:
+        ctx.navigator?.pop();
+        return const SduiActionResult.success();
+
+      // show_bottom_sheet, show_dialog, and refresh fall through to custom
+      // dispatch — SduiScreen wraps the registry with withOverlayCallback to
+      // handle overlays, and SduiController owns the refresh logic.
+      case SduiActionType.showBottomSheet:
       case SduiActionType.showDialog:
       case SduiActionType.refresh:
-        // These are handled by SduiScreen via the onEvent callback.
-        // Fall through to custom dispatch so host app can intercept.
         break;
 
       default:
@@ -263,6 +283,32 @@ final class SduiActionRegistry {
 // ---------------------------------------------------------------------------
 // Private interceptor — lives in the same library to extend the final class.
 // ---------------------------------------------------------------------------
+
+// Intercepts overlay action types before they reach the built-in handler.
+// Renderer-specific logic lives in the callback injected by SduiScreen so
+// this class stays import-free of the renderer layer.
+final class _OverlayRegistry extends SduiActionRegistry {
+  _OverlayRegistry({
+    required SduiActionRegistry delegate,
+    required this.callback,
+  }) : _delegate = delegate;
+
+  final SduiActionRegistry _delegate;
+  final SduiOverlayCallback callback;
+
+  @override
+  Future<SduiActionResult> dispatch(
+    String eventName,
+    SduiAction action,
+    SduiActionContext ctx,
+  ) {
+    if (action.type == SduiActionType.showBottomSheet ||
+        action.type == SduiActionType.showDialog) {
+      return callback(action, ctx);
+    }
+    return _delegate.dispatch(eventName, action, ctx);
+  }
+}
 
 final class _InterceptedRegistry extends SduiActionRegistry {
   _InterceptedRegistry({

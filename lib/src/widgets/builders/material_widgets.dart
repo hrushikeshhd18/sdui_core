@@ -25,8 +25,8 @@ Map<String, SduiWidgetBuilder> createMaterialWidgets() => {
       'sdui:app_bar': _buildAppBar,
       'sdui:search_bar': _buildSearchBar,
       'sdui:tab_bar': _buildTabBar,
-      'sdui:bottom_sheet': _buildBottomSheetPlaceholder,
-      'sdui:dialog': _buildDialogPlaceholder,
+      'sdui:bottom_sheet': _buildBottomSheet,
+      'sdui:dialog': _buildDialog,
     };
 
 Future<void> _fire(String key, SduiNode node, SduiBuildContext ctx) async {
@@ -197,20 +197,62 @@ Widget _buildTabBar(SduiNode node, SduiBuildContext ctx) {
   );
 }
 
-Widget _buildBottomSheetPlaceholder(SduiNode node, SduiBuildContext ctx) {
+// Content container for bottom sheets triggered via show_bottom_sheet action.
+// Use as the root type of the "content" payload — renders a drag-handle header
+// and the child nodes below it.
+Widget _buildBottomSheet(SduiNode node, SduiBuildContext ctx) {
+  final p = SduiProps(node.props);
   final children = ctx.childWidgets(node);
-  return Column(
-    mainAxisSize: MainAxisSize.min,
-    children: children,
+  return SafeArea(
+    child: Padding(
+      padding: p.getEdgeInsets('padding'),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          ...children,
+        ],
+      ),
+    ),
   );
 }
 
-Widget _buildDialogPlaceholder(SduiNode node, SduiBuildContext ctx) {
+// Content container for dialogs triggered via show_dialog action.
+// Props: title (String), confirmLabel (String), cancelLabel (String).
+Widget _buildDialog(SduiNode node, SduiBuildContext ctx) {
   final p = SduiProps(node.props);
   final children = ctx.childWidgets(node);
   return AlertDialog(
-    title:
-        p.getStringOrNull('title') != null ? Text(p.getString('title')) : null,
-    content: children.isNotEmpty ? children.first : null,
+    title: p.getStringOrNull('title') != null
+        ? Text(p.getString('title'))
+        : null,
+    content: children.length == 1
+        ? children.first
+        : children.isNotEmpty
+            ? Column(mainAxisSize: MainAxisSize.min, children: children)
+            : null,
+    actions: [
+      if (p.getStringOrNull('cancelLabel') != null)
+        TextButton(
+          onPressed: () => Navigator.of(ctx.flutterContext).pop(false),
+          child: Text(p.getString('cancelLabel')),
+        ),
+      if (p.getStringOrNull('confirmLabel') != null)
+        FilledButton(
+          onPressed: () => Navigator.of(ctx.flutterContext).pop(true),
+          child: Text(p.getString('confirmLabel')),
+        ),
+    ],
   );
 }

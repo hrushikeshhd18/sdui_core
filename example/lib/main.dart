@@ -314,24 +314,6 @@ Widget _bannerBuilder(SduiNode node, SduiBuildContext ctx) {
 // ---------------------------------------------------------------------------
 
 void main() {
-  // 1. Register built-in widgets.
-  SduiWidgetRegistry.defaults.registerAll(createCoreWidgets());
-
-  // 2. Register a custom widget.
-  SduiWidgetRegistry.defaults.register('myapp:banner', _bannerBuilder);
-
-  // 3. Register a custom action handler.
-  SduiActionRegistry.defaults.register(
-    'navigate_to_cart',
-    (action, ctx) async {
-      debugPrint(
-        '[Action] navigate_to_cart — payload: ${action.payload}',
-      );
-      // In a real app: Navigator.of(ctx.flutterContext).pushNamed('/cart');
-      return const SduiActionResult.success();
-    },
-  );
-
   runApp(const MyApp());
 }
 
@@ -339,14 +321,31 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
-      title: 'sdui_core Example',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
-        useMaterial3: true,
-      ),
-      home: const HomeScreen(),
-    );
+  Widget build(BuildContext context) => SduiScope(
+        // SduiScope auto-loads core, Material 3, and Cupertino widgets.
+        // Extend the default registry with app-specific custom widgets.
+        registry: SduiWidgetRegistry.withDefaults()
+          ..register('myapp:banner', _bannerBuilder),
+        actionRegistry: SduiActionRegistry.defaults
+          ..register(
+            'navigate_to_cart',
+            (action, ctx) async {
+              debugPrint(
+                '[Action] navigate_to_cart — payload: ${action.payload}',
+              );
+              // In a real app: Navigator.of(ctx.flutterContext).pushNamed('/cart');
+              return const SduiActionResult.success();
+            },
+          ),
+        child: MaterialApp(
+          title: 'sdui_core Example',
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+            useMaterial3: true,
+          ),
+          home: const HomeScreen(),
+        ),
+      );
 }
 
 /// Demonstrates [SduiScreen] pointed at a mock URL.
