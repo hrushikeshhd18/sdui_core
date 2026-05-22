@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:sdui_core/src/models/sdui_node.dart';
 import 'package:sdui_core/src/registry/widget_registry.dart';
 import 'package:sdui_core/src/renderer/key_manager.dart';
+import 'package:sdui_core/src/renderer/sdui_animations.dart';
 import 'package:sdui_core/src/widgets/sdui_bindings.dart';
 import 'package:sdui_core/src/widgets/sdui_debug_overlay.dart';
 
@@ -12,11 +13,6 @@ import 'package:sdui_core/src/widgets/sdui_debug_overlay.dart';
 /// Holds no state — call [render] whenever you have a fresh tree. The renderer
 /// uses [SduiKeyManager] for deterministic keying so Flutter's reconciliation
 /// can skip unchanged subtrees.
-///
-/// Every node is wrapped in a try-catch. If a builder throws (e.g. a missing
-/// required prop or an unregistered type), the renderer returns an inline error
-/// tile in debug mode and a [SizedBox.shrink] in release mode — so one bad node
-/// can never crash the whole screen.
 abstract final class SduiRenderer {
   /// Converts [node] into the corresponding Flutter widget subtree.
   ///
@@ -42,15 +38,7 @@ abstract final class SduiRenderer {
   /// - `bool` literal → used directly.
   /// - `"props.X"` string → resolves `node.props['X']` and coerces to bool.
   /// - `"binding.X"` string → resolves value from [SduiBindings] in the tree.
-  ///   The node is hidden when the key is absent or resolves to `false`/`""`.
   /// - Other non-empty `String` → visible (treats non-empty string as truthy).
-  ///
-  /// Example JSON:
-  /// ```json
-  /// { "visible_if": "binding.feature.newCheckout" }
-  /// { "visible_if": "binding.user.isPremium" }
-  /// { "visible_if": "props.inStock" }
-  /// ```
   static bool _isVisible(SduiNode node, SduiBuildContext ctx) {
     final raw = node.props['visible_if'];
     if (raw == null) return true;
@@ -94,29 +82,27 @@ abstract final class SduiRenderer {
         );
       }
     }
-    final keyed = KeyedSubtree(
-      key: SduiKeyManager.keyFor(node, parentPath: ctx.nodePath),
-      child: child,
+    final key = SduiKeyManager.keyFor(node, parentPath: ctx.nodePath);
+    Widget built = KeyedSubtree(key: key, child: child);
+    built = SduiAnimations.wrapWithTransition(
+      child: built,
+      node: node,
+      key: key,
     );
-    return _wrapDebug(keyed, node, ctx);
+    return _wrapDebug(built, node, ctx);
   }
 
   static Widget _renderParent(SduiParentNode node, SduiBuildContext ctx) {
-    final childCtx = ctx.childPath(node.id);
-    final childWidgets = [
-      for (final child in node.children) render(child, childCtx),
-    ];
-
-    // Stash children in context so parent builders can retrieve them via
-    // ctx.childWidgets(node) without re-entering the renderer.
-    final ctxWithKids = ctx.withChildren(node.id, childWidgets);
-
     Widget child;
     try {
+      final childCtx = ctx.childPath(node.id);
+      final childWidgets = [
+        for (final child in node.children) render(child, childCtx),
+      ];
+
+      final ctxWithKids = ctx.withChildren(node.id, childWidgets);
       final builder = ctx.registry.resolve(node.type, nodePath: ctx.nodePath);
-      final isolate = node.props['isolateRepaint'] as bool? ?? false;
       child = builder(node, ctxWithKids);
-      if (isolate) child = RepaintBoundary(child: child);
     } catch (e, stack) {
       child = _RendererErrorTile(node: node, error: e, path: ctx.nodePath);
       if (kDebugMode) {
@@ -125,18 +111,22 @@ abstract final class SduiRenderer {
             exception: e,
             stack: stack,
             context: ErrorDescription(
-              'rendering SDUI node "${node.type}" at path "${ctx.nodePath}"',
+              'rendering SDUI parent "${node.type}" at path "${ctx.nodePath}"',
             ),
           ),
         );
       }
     }
-
-    final keyed = KeyedSubtree(
-      key: SduiKeyManager.keyFor(node, parentPath: ctx.nodePath),
-      child: child,
+    final key = SduiKeyManager.keyFor(node, parentPath: ctx.nodePath);
+    final isolate = node.props['isolateRepaint'] as bool? ?? false;
+    Widget built = KeyedSubtree(key: key, child: child);
+    if (isolate) built = RepaintBoundary(child: built);
+    built = SduiAnimations.wrapWithTransition(
+      child: built,
+      node: node,
+      key: key,
     );
-    return _wrapDebug(keyed, node, ctx);
+    return _wrapDebug(built, node, ctx);
   }
 
   static Widget _renderUnknown(SduiUnknownNode node, SduiBuildContext ctx) {

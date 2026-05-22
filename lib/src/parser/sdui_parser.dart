@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sdui_core/src/exceptions/sdui_exceptions.dart';
 import 'package:sdui_core/src/models/sdui_action.dart';
 import 'package:sdui_core/src/models/sdui_node.dart';
+import 'package:sdui_core/src/parser/sdui_template.dart';
 import 'package:sdui_core/src/parser/sdui_validator.dart';
 import 'package:sdui_core/src/utils/sdui_logger.dart';
 
@@ -26,6 +27,8 @@ SduiNode _parseStringTask(String jsonString) {
 /// Every parse runs the [SduiValidator] first and throws on any blocking error.
 /// Unknown widget types produce [SduiUnknownNode] — the parser never silently
 /// drops nodes.
+///
+/// Templates are resolved before validation if present.
 ///
 /// ```dart
 /// // Synchronous (small payloads, UI thread)
@@ -75,9 +78,14 @@ abstract final class SduiParser {
   ///
   /// Validates [SduiValidator.validate] first; throws [SduiVersionException]
   /// or [SduiParseException] on any blocking validation error.
+  ///
+  /// Templates are resolved before validation if present in the payload.
   static SduiNode parse(Map<String, Object?> map) {
+    // Resolve templates first (DivKit-inspired)
+    final resolved = SduiTemplateResolver.resolve(map);
+
     final result = SduiValidator.validate(
-      map,
+      resolved,
     );
 
     for (final w in result.warnings) {
@@ -99,9 +107,9 @@ abstract final class SduiParser {
       );
     }
 
-    final rawRoot = map.containsKey('root')
-        ? (map['root'] as Map?)?.cast<String, Object?>() ?? map
-        : map;
+    final rawRoot = resolved.containsKey('root')
+        ? (resolved['root'] as Map?)?.cast<String, Object?>() ?? resolved
+        : resolved;
 
     return _parseNode(_toStringMap(rawRoot) ?? rawRoot, 'root');
   }

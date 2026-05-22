@@ -89,12 +89,14 @@ export 'src/models/sdui_props.dart';
 // Parser
 export 'src/parser/sdui_parser.dart';
 export 'src/parser/sdui_schema_migrator.dart';
+export 'src/parser/sdui_template.dart';
 export 'src/parser/sdui_validator.dart';
 // Registry
 export 'src/registry/action_registry.dart';
 export 'src/registry/widget_registry.dart';
 // Renderer
 export 'src/renderer/key_manager.dart';
+export 'src/renderer/sdui_animations.dart';
 export 'src/renderer/sdui_differ.dart';
 export 'src/renderer/sdui_renderer.dart';
 // Transport
