@@ -1,9 +1,4 @@
-import 'dart:convert';
-
-import 'package:sdui_core/src/exceptions/sdui_exceptions.dart';
-import 'package:sdui_core/src/parser/sdui_template.dart';
-
-/// Resolves [$ref] references and [templates] in an SDUI JSON payload.
+/// Resolves `$ref` references and templates in an SDUI JSON payload.
 ///
 /// Inspired by DivKit's template system — allows JSON payloads to define
 /// reusable templates that are expanded before parsing.
@@ -71,7 +66,7 @@ abstract final class SduiTemplateResolver {
     // Resolve $ref in the root node
     if (result['root'] is Map) {
       result['root'] = _resolveNodeRefs(
-        Map<String, Object?>.from(result['root'] as Map<String, Object?>),
+        Map<String, Object?>.from(result['root']! as Map),
         templateDefs,
         {},
       );
@@ -118,7 +113,7 @@ abstract final class SduiTemplateResolver {
       final value = node[key];
       if (value is Map) {
         node[key] = _resolveNodeRefs(
-          Map<String, Object?>.from(value as Map),
+          Map<String, Object?>.from(value),
           templates,
           inheritedProps,
         );
@@ -185,19 +180,17 @@ abstract final class SduiTemplateResolver {
   static Object? _resolveStringPlaceholders(
     String value,
     Map<String, Object?> props,
-  ) {
-    // Replace {{variable}} with props.variable or inheritedProps.variable
-    return value.replaceAllMapped(
-      RegExp(r'\{\{(\w+)\}\}'),
-      (match) {
-        final varName = match.group(1)!;
-        if (props.containsKey(varName)) {
-          return props[varName]?.toString() ?? '';
-        }
-        return match.group(0)!; // Keep unresolved
-      },
-    );
-  }
+  ) =>
+      value.replaceAllMapped(
+        RegExp(r'\{\{(\w+)\}\}'),
+        (match) {
+          final varName = match.group(1)!;
+          if (props.containsKey(varName)) {
+            return props[varName]?.toString() ?? '';
+          }
+          return match.group(0)!;
+        },
+      );
 
   static Map<String, Object?> _extractProps(Map<String, Object?> node) {
     final props = node['props'];

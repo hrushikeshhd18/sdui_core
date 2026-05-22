@@ -4,8 +4,8 @@ import 'package:sdui_core/src/models/sdui_node.dart';
 
 /// Applies transition animations to SDUI nodes.
 ///
-/// Inspired by DivKit's [transition_in], [transition_out], and
-/// [transition_change] system. Nodes can declare animations in their props:
+/// Inspired by DivKit's `transition_in`, `transition_out`, and
+/// `transition_change` system. Nodes can declare animations in their props:
 ///
 /// **JSON example:**
 /// ```json

@@ -1,266 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sdui_core/sdui_core.dart';
-
-// ---------------------------------------------------------------------------
-// Mock transport — no server required to run this example
-// ---------------------------------------------------------------------------
-
-class _MockTransport implements SduiTransport {
-  @override
-  Future<Map<String, Object?>> fetch(
-    String url, {
-    Map<String, String>? headers,
-  }) async =>
-      _homeScreenJson();
-
-  @override
-  Stream<Map<String, Object?>> subscribe(
-    String url, {
-    Map<String, String>? headers,
-  }) =>
-      Stream.value(_homeScreenJson());
-
-  @override
-  Future<void> dispose() async {}
-}
-
-// ---------------------------------------------------------------------------
-// Realistic quick-commerce home screen JSON
-// ---------------------------------------------------------------------------
-
-Map<String, dynamic> _homeScreenJson() => {
-      'sdui_version': '1.0',
-      'root': {
-        'type': 'sdui:column',
-        'id': 'root',
-        'version': 1,
-        'props': {'scrollDirection': 'vertical'},
-        'actions': {},
-        'children': [
-          // Hero banner (custom widget registered below)
-          {
-            'type': 'myapp:banner',
-            'id': 'hero_banner',
-            'version': 1,
-            'props': {
-              'imageUrl': 'https://picsum.photos/seed/hero/800/300',
-              'title': 'Fresh groceries\nin 10 minutes',
-              'subtitle': 'Free delivery on first order',
-            },
-            'actions': {},
-          },
-          // Category section title
-          {
-            'type': 'sdui:padding',
-            'id': 'category_padding',
-            'version': 1,
-            'props': {'top': 16, 'left': 16, 'right': 16, 'bottom': 8},
-            'actions': {},
-            'children': [
-              {
-                'type': 'sdui:text',
-                'id': 'category_title',
-                'version': 1,
-                'props': {'text': 'Shop by category', 'style': 'h3'},
-                'actions': {},
-              },
-            ],
-          },
-          // Horizontal category list
-          {
-            'type': 'sdui:list',
-            'id': 'category_list',
-            'version': 1,
-            'props': {'scrollDirection': 'horizontal'},
-            'actions': {},
-            'children': [
-              _categoryChip('cat_fruits', 'Fruits', '🍎'),
-              _categoryChip('cat_veggies', 'Veggies', '🥦'),
-              _categoryChip('cat_dairy', 'Dairy', '🥛'),
-              _categoryChip('cat_bakery', 'Bakery', '🍞'),
-              _categoryChip('cat_drinks', 'Drinks', '🧃'),
-            ],
-          },
-          // Product grid
-          {
-            'type': 'sdui:padding',
-            'id': 'products_padding',
-            'version': 1,
-            'props': {'all': 16},
-            'actions': {},
-            'children': [
-              {
-                'type': 'sdui:grid',
-                'id': 'product_grid',
-                'version': 1,
-                'props': {
-                  'columns': 2,
-                  'spacing': 12,
-                  'aspectRatio': 0.75,
-                },
-                'actions': {},
-                'children': [
-                  _productCard('prod_1', 'Organic Apples', r'$3.99',
-                      'https://picsum.photos/seed/apple/200/200',),
-                  _productCard('prod_2', 'Whole Milk 2L', r'$2.49',
-                      'https://picsum.photos/seed/milk/200/200',),
-                  _productCard('prod_3', 'Sourdough Bread', r'$4.99',
-                      'https://picsum.photos/seed/bread/200/200',),
-                  _productCard('prod_4', 'Orange Juice', r'$3.29',
-                      'https://picsum.photos/seed/oj/200/200',),
-                ],
-              },
-            ],
-          },
-          // CTA button dispatching a custom action
-          {
-            'type': 'sdui:padding',
-            'id': 'cta_padding',
-            'version': 1,
-            'props': {'horizontal': 16, 'bottom': 32},
-            'actions': {},
-            'children': [
-              {
-                'type': 'sdui:button',
-                'id': 'view_cart_btn',
-                'version': 1,
-                'props': {
-                  'label': 'View Cart (3 items)',
-                  'variant': 'elevated',
-                },
-                'actions': {
-                  'onTap': {
-                    'type': 'dispatch',
-                    'event': 'navigate_to_cart',
-                    'payload': {'source': 'home_cta'},
-                  },
-                },
-              },
-            ],
-          },
-        ],
-      },
-    };
-
-Map<String, dynamic> _categoryChip(
-        String id, String label, String emoji,) =>
-    {
-      'type': 'sdui:padding',
-      'id': id,
-      'version': 1,
-      'props': {'all': 8},
-      'actions': {},
-      'children': [
-        {
-          'type': 'sdui:card',
-          'id': '${id}_card',
-          'version': 1,
-          'props': {'borderRadius': 12},
-          'actions': {},
-          'children': [
-            {
-              'type': 'sdui:padding',
-              'id': '${id}_inner',
-              'version': 1,
-              'props': {'horizontal': 16, 'vertical': 12},
-              'actions': {},
-              'children': [
-                {
-                  'type': 'sdui:column',
-                  'id': '${id}_col',
-                  'version': 1,
-                  'props': {
-                    'mainAxisSize': 'min',
-                    'crossAxisAlignment': 'center',
-                  },
-                  'actions': {},
-                  'children': [
-                    {
-                      'type': 'sdui:text',
-                      'id': '${id}_emoji',
-                      'version': 1,
-                      'props': {'text': emoji, 'fontSize': 28},
-                      'actions': {},
-                    },
-                    {
-                      'type': 'sdui:text',
-                      'id': '${id}_label',
-                      'version': 1,
-                      'props': {'text': label, 'style': 'caption'},
-                      'actions': {},
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    };
-
-Map<String, dynamic> _productCard(
-        String id, String name, String price, String imgUrl,) =>
-    {
-      'type': 'sdui:card',
-      'id': id,
-      'version': 1,
-      'props': {'borderRadius': 12, 'elevation': 2},
-      'actions': {},
-      'children': [
-        {
-          'type': 'sdui:column',
-          'id': '${id}_col',
-          'version': 1,
-          'props': {'crossAxisAlignment': 'stretch'},
-          'actions': {},
-          'children': [
-            {
-              'type': 'sdui:image',
-              'id': '${id}_img',
-              'version': 1,
-              'props': {'url': imgUrl, 'height': 120, 'fit': 'cover'},
-              'actions': {},
-            },
-            {
-              'type': 'sdui:padding',
-              'id': '${id}_info',
-              'version': 1,
-              'props': {'all': 8},
-              'actions': {},
-              'children': [
-                {
-                  'type': 'sdui:text',
-                  'id': '${id}_name',
-                  'version': 1,
-                  'props': {
-                    'text': name,
-                    'style': 'body2',
-                    'maxLines': 2,
-                    'overflow': 'ellipsis',
-                  },
-                  'actions': {},
-                },
-                {
-                  'type': 'sdui:text',
-                  'id': '${id}_price',
-                  'version': 1,
-                  'props': {
-                    'text': price,
-                    'style': 'body',
-                    'fontWeight': 'bold',
-                  },
-                  'actions': {},
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    };
-
-// ---------------------------------------------------------------------------
-// Custom banner widget — demonstrates custom widget registration
-// ---------------------------------------------------------------------------
+import 'package:sdui_core_example/transport/mock_transport.dart';
 
 Widget _bannerBuilder(SduiNode node, SduiBuildContext ctx) {
   final props = node.props;
@@ -276,6 +16,11 @@ Widget _bannerBuilder(SduiNode node, SduiBuildContext ctx) {
         height: 200,
         width: double.infinity,
         fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Container(
+          height: 200,
+          color: Colors.green.shade100,
+          child: const Center(child: Icon(Icons.image, size: 64)),
+        ),
       ),
       Container(
         decoration: const BoxDecoration(
@@ -309,70 +54,198 @@ Widget _bannerBuilder(SduiNode node, SduiBuildContext ctx) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// App entry point
-// ---------------------------------------------------------------------------
-
-void main() {
-  runApp(const MyApp());
+Widget _throwsBuilder(SduiNode node, SduiBuildContext ctx) {
+  throw Exception(
+    node.props['message'] as String? ?? 'Intentional builder crash',
+  );
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+final _mockTransport = MockTransport();
+
+class ExampleApp extends StatelessWidget {
+  const ExampleApp({super.key});
 
   @override
   Widget build(BuildContext context) => SduiScope(
-        // SduiScope auto-loads core, Material 3, and Cupertino widgets.
-        // Extend the default registry with app-specific custom widgets.
         registry: SduiWidgetRegistry.withDefaults()
-          ..register('myapp:banner', _bannerBuilder),
+          ..register('myapp:banner', _bannerBuilder)
+          ..register('myapp:throws_on_build', _throwsBuilder),
         actionRegistry: SduiActionRegistry.defaults
-          ..register(
-            'navigate_to_cart',
-            (action, ctx) async {
-              debugPrint(
-                '[Action] navigate_to_cart — payload: ${action.payload}',
-              );
-              // In a real app: Navigator.of(ctx.flutterContext).pushNamed('/cart');
-              return const SduiActionResult.success();
-            },
-          ),
+          ..register('navigate_to_cart', (action, ctx) async {
+            debugPrint(
+              '[Action] navigate_to_cart — payload: ${action.payload}',
+            );
+            return const SduiActionResult.success();
+          }),
         child: MaterialApp(
-          title: 'sdui_core Example',
+          title: 'sdui_core Examples',
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
             useMaterial3: true,
           ),
-          home: const HomeScreen(),
+          home: const ExampleHub(),
         ),
       );
 }
 
-/// Demonstrates [SduiScreen] pointed at a mock URL.
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class ExampleHub extends StatelessWidget {
+  const ExampleHub({super.key});
+
+  static const _examples = [
+    _ExampleCard(
+      title: 'Quick-Commerce Home',
+      subtitle: 'Rich layout with custom banner, grid, cards, and actions',
+      icon: Icons.store,
+      endpoint: '/home',
+    ),
+    _ExampleCard(
+      title: 'Widget Showcase',
+      subtitle: 'Form widgets: text_field, checkbox, slider, dropdown, buttons',
+      icon: Icons.widgets,
+      endpoint: '/forms',
+    ),
+    _ExampleCard(
+      title: 'Templates & \$ref',
+      subtitle: 'Reusable node templates with {{variable}} interpolation',
+      icon: Icons.copy_all,
+      endpoint: '/templates',
+    ),
+    _ExampleCard(
+      title: 'Animations',
+      subtitle: 'Fade, slide, scale, and size transition_in effects',
+      icon: Icons.animation,
+      endpoint: '/animations',
+    ),
+    _ExampleCard(
+      title: 'Error Boundary',
+      subtitle: 'Bad nodes render debug tiles; children of crashed parents survive',
+      icon: Icons.shield,
+      endpoint: '/error-boundary',
+    ),
+    _ExampleCard(
+      title: 'Live Updates',
+      subtitle: 'SduiScreen streaming transport and hot-reload demo',
+      icon: Icons.sync,
+      endpoint: '/live',
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) => Scaffold(
-      appBar: AppBar(
-        title: const Text('sdui_core Demo'),
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
-      ),
-      body: SingleChildScrollView(
-        child: SduiScreen(
-          url: 'https://api.example.com/layouts/home',
-          transport: _MockTransport(),
-          loadingBuilder: (_) => const Center(
-            child: Padding(
-              padding: EdgeInsets.all(48),
-              child: CircularProgressIndicator(),
+        appBar: AppBar(
+          title: const Text('sdui_core Examples'),
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+        ),
+        body: ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: _examples.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          itemBuilder: (context, i) => _ExampleCardWidget(
+            card: _examples[i],
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => _ExampleScreen(card: _examples[i]),
+              ),
             ),
           ),
-          errorBuilder: (_, err) => Center(child: Text('Error: $err')),
-          onEvent: (event, payload) =>
-              debugPrint('[SduiScreen] event: $event, payload: $payload'),
+        ),
+      );
+}
+
+class _ExampleCard {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final String endpoint;
+  const _ExampleCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.endpoint,
+  });
+}
+
+class _ExampleCardWidget extends StatelessWidget {
+  final _ExampleCard card;
+  final VoidCallback onTap;
+  const _ExampleCardWidget({required this.card, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Icon(card.icon, size: 40, color: theme.colorScheme.primary),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      card.title,
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      card.subtitle,
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: Colors.grey),
+            ],
+          ),
         ),
       ),
     );
+  }
 }
+
+class _ExampleScreen extends StatelessWidget {
+  final _ExampleCard card;
+  const _ExampleScreen({required this.card});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(
+          title: Text(card.title),
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+        ),
+        body: SduiScreen(
+          key: ValueKey(card.endpoint),
+          url: 'https://api.example.com${card.endpoint}',
+          transport: _mockTransport,
+          loadingBuilder: (_) => const Center(child: CircularProgressIndicator()),
+          errorBuilder: (_, err) => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text('Error: $err', textAlign: TextAlign.center),
+                ],
+              ),
+            ),
+          ),
+          onEvent: (event, payload) =>
+              debugPrint('[${card.endpoint}] event: $event, payload: $payload'),
+        ),
+      );
+}
+
+void main() => runApp(const ExampleApp());
