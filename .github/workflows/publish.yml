@@ -9,6 +9,8 @@ jobs:
   publish:
     name: Publish
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -27,11 +29,6 @@ jobs:
 
       - name: Test
         run: flutter test
-
-      - name: Setup pub credentials
-        run: |
-          mkdir -p $HOME/.pub-cache
-          echo '${{ secrets.PUB_CREDENTIALS }}' > $HOME/.pub-cache/credentials.json
 
       - name: Publish
         run: dart pub publish --force
