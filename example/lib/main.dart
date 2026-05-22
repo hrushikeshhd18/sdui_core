@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sdui_core/sdui_core.dart';
-import 'package:sdui_core_example/transport/mock_transport.dart';
+import 'transport/mock_transport.dart';
 
 Widget _bannerBuilder(SduiNode node, SduiBuildContext ctx) {
   final props = node.props;

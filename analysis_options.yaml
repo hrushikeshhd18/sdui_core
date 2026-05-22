@@ -10,6 +10,7 @@ analyzer:
     - '**/*.freezed.dart'
     - 'build/**'
     - 'test/golden/goldens/**'
+    - 'example/**'
 
 linter:
   rules:
