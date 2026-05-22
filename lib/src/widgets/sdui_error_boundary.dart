@@ -9,7 +9,7 @@ import 'package:sdui_core/src/models/sdui_node.dart';
 /// If the wrapped widget throws an exception during build, this widget catches
 /// it and displays an error tile instead of crashing the entire screen.
 ///
-/// Used internally by [SduiRenderer] when rendering nodes, and can be manually
+/// Used internally by `SduiRenderer` when rendering nodes, and can be manually
 /// applied by custom widget builders for extra safety.
 ///
 /// **JSON example:**
@@ -131,15 +131,12 @@ class _ErrorCaptureState extends State<_ErrorCapture> {
 
   @override
   void dispose() {
-    // Restore the previous error builder
     ErrorWidget.builder = _previousErrorBuilder;
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    return widget.child;
-  }
+  Widget build(BuildContext context) => widget.child;
 }
 
 /// Minimal error display widget.
@@ -149,47 +146,45 @@ class _ErrorWidget extends StatelessWidget {
   final FlutterErrorDetails details;
 
   @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 100,
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Material(
-          color: Colors.red[50],
-          child: Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: Icon(Icons.error_outline, color: Colors.red[700]),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Widget Error',
-                      style: TextStyle(
-                        color: Colors.red[700],
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      details.exception.toString(),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: Colors.red[600], fontSize: 12),
-                    ),
-                  ],
+  Widget build(BuildContext context) => SizedBox(
+        width: double.infinity,
+        height: 100,
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Material(
+            color: Colors.red[50],
+            child: Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Icon(Icons.error_outline, color: Colors.red[700]),
                 ),
-              ),
-            ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Widget Error',
+                        style: TextStyle(
+                          color: Colors.red[700],
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        details.exception.toString(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: Colors.red[600], fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
-  }
+      );
 }
 
 /// Error tile displayed when a node fails to render.
@@ -285,9 +280,7 @@ class _ErrorTileState extends State<_ErrorTile> {
               child: Row(
                 children: [
                   Icon(
-                    _showDetails
-                        ? Icons.expand_less
-                        : Icons.expand_more,
+                    _showDetails ? Icons.expand_less : Icons.expand_more,
                     color: errorColor,
                     size: 16,
                   ),

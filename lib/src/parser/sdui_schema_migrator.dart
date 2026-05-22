@@ -3,7 +3,7 @@ import 'package:meta/meta.dart';
 /// Migrates SDUI JSON payloads between schema versions.
 ///
 /// The migrator is stateless and never mutates its input — every method
-/// returns a new map. Call [SduiParser.validate] on the result separately
+/// returns a new map. Call `SduiParser.validate` on the result separately
 /// to confirm the migrated payload is structurally valid.
 ///
 /// ## v1.0 → v2.0 migration
@@ -84,13 +84,15 @@ abstract final class SduiSchemaMigrator {
     Map<String, Object?> payload,
   ) {
     final rawRoot = payload['root'];
-    final migratedRoot =
-        rawRoot is Map ? _migrateNode(Map<String, Object?>.from(rawRoot)) : rawRoot;
+    final migratedRoot = rawRoot is Map
+        ? _migrateNode(Map<String, Object?>.from(rawRoot))
+        : rawRoot;
 
     return <String, Object?>{
       ...payload,
       'sdui_version': latestVersion,
-      if (!payload.containsKey('metadata')) 'metadata': const <String, Object?>{},
+      if (!payload.containsKey('metadata'))
+        'metadata': const <String, Object?>{},
       'root': migratedRoot,
     };
   }

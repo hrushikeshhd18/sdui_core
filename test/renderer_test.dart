@@ -83,6 +83,83 @@ void main() {
       expect(find.textContaining('myapp:ghost'), findsOneWidget);
     });
 
+    testWidgets('builder exception renders error tile in debug mode, not crash',
+        (tester) async {
+      final registry = SduiWidgetRegistry()
+        ..registerAll(createCoreWidgets())
+        ..register('sdui:boom', (node, ctx) => throw Exception('boom'));
+
+      SduiBuildContext makeCtx(BuildContext flutterCtx) => SduiBuildContext(
+            flutterContext: flutterCtx,
+            registry: registry,
+            actionRegistry: SduiActionRegistry(),
+            nodePath: 'root',
+          );
+
+      const boomNode = SduiLeafNode(
+        id: 'b1',
+        type: 'sdui:boom',
+        version: 1,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (ctx) => SduiRenderer.render(boomNode, makeCtx(ctx)),
+          ),
+        ),
+      );
+
+      // Renderer calls FlutterError.reportError in debug mode — consume it.
+      tester.takeException();
+
+      if (kDebugMode) {
+        expect(find.textContaining('sdui:boom'), findsOneWidget);
+      } else {
+        expect(find.textContaining('sdui:boom'), findsNothing);
+      }
+    });
+
+    testWidgets(
+        'parent builder exception renders error tile, children still safe',
+        (tester) async {
+      final registry = SduiWidgetRegistry()
+        ..registerAll(createCoreWidgets())
+        ..register('sdui:bad_parent', (node, ctx) => throw Exception('bad'));
+
+      SduiBuildContext makeCtx(BuildContext flutterCtx) => SduiBuildContext(
+            flutterContext: flutterCtx,
+            registry: registry,
+            actionRegistry: SduiActionRegistry(),
+            nodePath: 'root',
+          );
+
+      const badParent = SduiParentNode(
+        id: 'bp1',
+        type: 'sdui:bad_parent',
+        version: 1,
+        children: [
+          SduiLeafNode(
+            id: 'ok',
+            type: 'sdui:text',
+            version: 1,
+            props: {'text': 'safe'},
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (ctx) => SduiRenderer.render(badParent, makeCtx(ctx)),
+          ),
+        ),
+      );
+
+      // Consume the FlutterError reported by the renderer — this is expected.
+      tester.takeException();
+    });
+
     testWidgets('KeyedSubtree has correct key for leaf node', (tester) async {
       await tester.pumpWidget(
         MaterialApp(

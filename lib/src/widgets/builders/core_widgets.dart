@@ -5,13 +5,14 @@ import 'package:sdui_core/src/models/sdui_props.dart';
 import 'package:sdui_core/src/registry/action_registry.dart';
 import 'package:sdui_core/src/registry/widget_registry.dart';
 import 'package:sdui_core/src/utils/sdui_icons.dart';
+import 'package:sdui_core/src/widgets/sdui_error_boundary.dart';
 import 'package:sdui_core/src/widgets/sdui_theme.dart';
 
 // ---------------------------------------------------------------------------
 // Public entry point
 // ---------------------------------------------------------------------------
 
-/// Returns all 28 built-in core widget builders.
+/// Returns all 29 built-in core widget builders.
 ///
 /// Register once at startup:
 /// ```dart
@@ -47,6 +48,7 @@ Map<String, SduiWidgetBuilder> createCoreWidgets() => {
       'sdui:placeholder': _buildPlaceholder,
       'sdui:badge': _buildBadge,
       'sdui:chip': _buildChip,
+      'sdui:error_boundary': _buildErrorBoundary,
     };
 
 // ---------------------------------------------------------------------------
@@ -500,4 +502,29 @@ Widget _buildChip(SduiNode node, SduiBuildContext ctx) {
     label: Text(label),
     backgroundColor: p.getColorOrNull('backgroundColor'),
   );
+}
+
+/// Wraps its children in a [SduiErrorBoundary] so that a build-time exception
+/// in any descendant shows an error tile instead of crashing the screen.
+///
+/// **JSON example:**
+/// ```json
+/// {
+///   "type": "sdui:error_boundary",
+///   "id": "safe_section",
+///   "version": 1,
+///   "props": {},
+///   "actions": {},
+///   "children": [
+///     { "type": "myapp:complex_widget", "id": "cw1", "version": 1,
+///       "props": {}, "actions": {} }
+///   ]
+/// }
+/// ```
+Widget _buildErrorBoundary(SduiNode node, SduiBuildContext ctx) {
+  final children = ctx.childWidgets(node);
+  final child = children.length == 1
+      ? children.first
+      : Column(mainAxisSize: MainAxisSize.min, children: children);
+  return SduiErrorBoundary(node: node, child: child);
 }

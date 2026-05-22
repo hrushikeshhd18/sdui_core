@@ -1189,6 +1189,7 @@ expect(events, contains('open_sale'));
 | `sdui:badge` | `Badge` | `label`, `backgroundColor` |
 | `sdui:chip` | `ActionChip` / `FilterChip` | `label`, `selected`, `variant` |
 | `sdui:placeholder` | `Placeholder` | `color`, `strokeWidth` |
+| `sdui:error_boundary` | `SduiErrorBoundary` | `onError` (Dart callback) |
 
 ### Material 3 — `createMaterialWidgets()`
 
@@ -1205,7 +1206,23 @@ expect(events, contains('open_sale'));
 
 `sdui:cupertino_button` · `sdui:cupertino_nav_bar` · `sdui:cupertino_list_tile` · `sdui:cupertino_switch` · `sdui:cupertino_slider` · `sdui:cupertino_activity` · `sdui:cupertino_dialog`
 
-> All three widget sets are registered automatically by `SduiScope`. Pass a custom `registry` to `SduiScope` only when you need to add or override builders.
+### Form — `createFormWidgets()`
+
+| Type | Flutter widget | Key props |
+|---|---|---|
+| `sdui:text_field` | `TextField` | `label`, `hint`, `variant`, `keyboardType`, `obscureText`, `maxLines`, `enabled` |
+| `sdui:checkbox` | `Checkbox` | `value`, `label` |
+| `sdui:checkbox_list_tile` | `CheckboxListTile` | `value`, `label`, `subtitle` |
+| `sdui:radio` | `Radio` | `value`, `groupValue` |
+| `sdui:radio_list_tile` | `RadioListTile` | `value`, `groupValue`, `label` |
+| `sdui:slider` | `Slider` | `value`, `min`, `max`, `divisions` |
+| `sdui:range_slider` | `RangeSlider` | `start`, `end`, `min`, `max` |
+| `sdui:switch` | `Switch` | `value`, `label` |
+| `sdui:dropdown` | `DropdownButtonFormField` | `value`, `items`, `label` |
+
+All form widgets dispatch state changes via `onChange` / `onSubmitted` actions in the node's `actions` map.
+
+> All four widget sets (core, material, cupertino, form) are registered automatically by `SduiScope`. Pass a custom `registry` to `SduiScope` only when you need to add or override builders.
 
 ---
 
@@ -1296,6 +1313,41 @@ Dialog with confirm / cancel:
       ]
     }
   }
+}
+```
+
+---
+
+## Error handling
+
+### Renderer error protection
+
+Builder exceptions are caught per-node inside `SduiRenderer`. A broken node shows an inline error tile in debug mode and collapses to `SizedBox.shrink()` in release — one bad node can never crash the whole screen.
+
+### SduiErrorBoundary
+
+Wraps a subtree and catches Flutter build-time errors using `ErrorWidget.builder`. Use it to isolate risky subtrees and log errors:
+
+```dart
+SduiErrorBoundary(
+  node: node,
+  onError: (node, error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack);
+  },
+  child: SduiRenderer.render(node, ctx),
+)
+```
+
+In JSON, use `sdui:error_boundary` as the node type — children are wrapped automatically:
+
+```json
+{
+  "type": "sdui:error_boundary",
+  "id": "safe_section",
+  "version": 1,
+  "props": {},
+  "actions": {},
+  "children": [...]
 }
 ```
 

@@ -234,9 +234,8 @@ Widget _buildDialog(SduiNode node, SduiBuildContext ctx) {
   final p = SduiProps(node.props);
   final children = ctx.childWidgets(node);
   return AlertDialog(
-    title: p.getStringOrNull('title') != null
-        ? Text(p.getString('title'))
-        : null,
+    title:
+        p.getStringOrNull('title') != null ? Text(p.getString('title')) : null,
     content: children.length == 1
         ? children.first
         : children.isNotEmpty

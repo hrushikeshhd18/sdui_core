@@ -4,7 +4,6 @@ import 'package:sdui_core/src/models/sdui_node.dart';
 import 'package:sdui_core/src/models/sdui_props.dart';
 import 'package:sdui_core/src/registry/action_registry.dart';
 import 'package:sdui_core/src/registry/widget_registry.dart';
-import 'package:sdui_core/src/utils/sdui_icons.dart';
 
 /// Returns form-related widget builders for text input, selection, and feedback.
 ///
@@ -69,11 +68,11 @@ Widget _buildTextField(SduiNode node, SduiBuildContext ctx) {
   final label = p.getStringOrNull('label');
   final hint = p.getStringOrNull('hint');
   final enabled = p.getBool('enabled', fallback: true);
-  final obscureText = p.getBool('obscureText', fallback: false);
-  final readOnly = p.getBool('readOnly', fallback: false);
+  final obscureText = p.getBool('obscureText');
+  final readOnly = p.getBool('readOnly');
   final maxLines = p.getInt('maxLines', fallback: 1);
   final minLines = p.getInt('minLines', fallback: 1);
-  final maxLength = p.getInt('maxLength', fallback: 0);
+  final maxLength = p.getInt('maxLength');
   final textAlign = p.getString('textAlign', fallback: 'start');
   final variant = p.getString('variant', fallback: 'outlined');
   final keyboardTypeStr = p.getString('keyboardType', fallback: 'text');
@@ -81,7 +80,7 @@ Widget _buildTextField(SduiNode node, SduiBuildContext ctx) {
   final keyboardType = _parseKeyboardType(keyboardTypeStr);
   final textAlignValue = _parseTextAlign(textAlign);
 
-  InputDecoration decoration = InputDecoration(
+  final decoration = InputDecoration(
     labelText: label,
     hintText: hint,
     border: variant == 'filled'
@@ -127,12 +126,12 @@ Widget _buildTextField(SduiNode node, SduiBuildContext ctx) {
 /// ```
 Widget _buildCheckbox(SduiNode node, SduiBuildContext ctx) {
   final p = SduiProps(node.props);
-  final value = p.getBool('value', fallback: false);
-  final tristate = p.getBool('tristate', fallback: false);
+  final value = p.getBool('value');
+  final tristate = p.getBool('tristate');
   final enabled = p.getBool('enabled', fallback: true);
 
   return Checkbox(
-    value: tristate && value == null ? null : value,
+    value: value,
     tristate: tristate,
     onChanged: enabled ? (_) => _fire('onChange', node, ctx) : null,
   );
@@ -161,7 +160,7 @@ Widget _buildCheckboxListTile(SduiNode node, SduiBuildContext ctx) {
   final p = SduiProps(node.props);
   final title = p.getString('title');
   final subtitle = p.getStringOrNull('subtitle');
-  final value = p.getBool('value', fallback: false);
+  final value = p.getBool('value');
   final enabled = p.getBool('enabled', fallback: true);
 
   return CheckboxListTile(
@@ -193,12 +192,15 @@ Widget _buildCheckboxListTile(SduiNode node, SduiBuildContext ctx) {
 Widget _buildRadio(SduiNode node, SduiBuildContext ctx) {
   final p = SduiProps(node.props);
   final value = p.getString('value');
-  final groupValue = p.getString('groupValue', fallback: '');
+  final groupValue = p.getString('groupValue');
   final enabled = p.getBool('enabled', fallback: true);
 
+  // ignore: deprecated_member_use
   return Radio<String>(
     value: value,
+    // ignore: deprecated_member_use
     groupValue: groupValue,
+    // ignore: deprecated_member_use
     onChanged: enabled ? (_) => _fire('onChange', node, ctx) : null,
   );
 }
@@ -228,14 +230,17 @@ Widget _buildRadioListTile(SduiNode node, SduiBuildContext ctx) {
   final title = p.getString('title');
   final subtitle = p.getStringOrNull('subtitle');
   final value = p.getString('value');
-  final groupValue = p.getString('groupValue', fallback: '');
+  final groupValue = p.getString('groupValue');
   final enabled = p.getBool('enabled', fallback: true);
 
+  // ignore: deprecated_member_use
   return RadioListTile<String>(
     title: Text(title),
     subtitle: subtitle != null ? Text(subtitle) : null,
     value: value,
+    // ignore: deprecated_member_use
     groupValue: groupValue,
+    // ignore: deprecated_member_use
     onChanged: enabled ? (_) => _fire('onChange', node, ctx) : null,
   );
 }
@@ -263,10 +268,10 @@ Widget _buildRadioListTile(SduiNode node, SduiBuildContext ctx) {
 /// ```
 Widget _buildSlider(SduiNode node, SduiBuildContext ctx) {
   final p = SduiProps(node.props);
-  final value = p.getDouble('value', fallback: 0.0);
-  final min = p.getDouble('min', fallback: 0.0);
+  final value = p.getDouble('value');
+  final min = p.getDouble('min');
   final max = p.getDouble('max', fallback: 100.0);
-  final divisions = p.getInt('divisions', fallback: 0);
+  final divisions = p.getInt('divisions');
   final label = p.getStringOrNull('label');
   final enabled = p.getBool('enabled', fallback: true);
 
@@ -305,11 +310,11 @@ Widget _buildSlider(SduiNode node, SduiBuildContext ctx) {
 /// ```
 Widget _buildRangeSlider(SduiNode node, SduiBuildContext ctx) {
   final p = SduiProps(node.props);
-  final startValue = p.getDouble('startValue', fallback: 0.0);
+  final startValue = p.getDouble('startValue');
   final endValue = p.getDouble('endValue', fallback: 100.0);
-  final min = p.getDouble('min', fallback: 0.0);
+  final min = p.getDouble('min');
   final max = p.getDouble('max', fallback: 100.0);
-  final divisions = p.getInt('divisions', fallback: 0);
+  final divisions = p.getInt('divisions');
   final startLabel = p.getStringOrNull('startLabel');
   final endLabel = p.getStringOrNull('endLabel');
   final enabled = p.getBool('enabled', fallback: true);
@@ -346,7 +351,7 @@ Widget _buildRangeSlider(SduiNode node, SduiBuildContext ctx) {
 /// ```
 Widget _buildSwitch(SduiNode node, SduiBuildContext ctx) {
   final p = SduiProps(node.props);
-  final value = p.getBool('value', fallback: false);
+  final value = p.getBool('value');
   final enabled = p.getBool('enabled', fallback: true);
 
   return Switch.adaptive(
@@ -386,11 +391,11 @@ Widget _buildDropdown(SduiNode node, SduiBuildContext ctx) {
 
   final items = <DropdownMenuItem<String>>[];
   final itemsRaw = p['items'] as List?;
-  
+
   if (itemsRaw != null) {
     for (final itemObj in itemsRaw) {
       if (itemObj is Map) {
-        final itemMap = Map<String, Object?>.from(itemObj as Map);
+        final itemMap = Map<String, Object?>.from(itemObj);
         final label = (itemMap['label'] ?? '') as String;
         final itemValue = (itemMap['value'] ?? '') as String;
         items.add(
@@ -432,7 +437,7 @@ TextInputType _parseKeyboardType(String keyboardType) {
     case 'number':
       return TextInputType.number;
     case 'decimal':
-      return TextInputType.numberWithOptions(decimal: true);
+      return const TextInputType.numberWithOptions(decimal: true);
     case 'multiline':
       return TextInputType.multiline;
     case 'name':

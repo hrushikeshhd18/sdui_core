@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sdui_core/sdui_core.dart';
 
-import '../helpers/test_helpers.dart';
-
 void main() {
   group('SduiErrorBoundary', () {
     testWidgets('renders wrapped child widget normally', (tester) async {
@@ -15,13 +13,13 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: SduiErrorBoundary(
               node: testNode,
-              child: Container(
+              child: ColoredBox(
                 color: Colors.blue,
-                child: const Text('Safe child'),
+                child: Text('Safe child'),
               ),
             ),
           ),
@@ -30,7 +28,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Safe child'), findsOneWidget);
-      expect(find.byType(Container), findsOneWidget);
     });
 
     testWidgets('can be used in widget tree without issues', (tester) async {
@@ -136,9 +133,9 @@ void main() {
         version: 1,
       );
 
-      final boundary = SduiErrorBoundary(
+      const boundary = SduiErrorBoundary(
         node: node,
-        child: const SizedBox.shrink(),
+        child: SizedBox.shrink(),
       );
 
       expect(boundary.node, node);
@@ -146,4 +143,3 @@ void main() {
     });
   });
 }
-

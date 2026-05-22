@@ -255,7 +255,8 @@ abstract final class SduiValidator {
       errors.add(
         SduiValidationError(
           path: path,
-          message: '"actions" must be a JSON object, got: ${actions.runtimeType}',
+          message:
+              '"actions" must be a JSON object, got: ${actions.runtimeType}',
           code: 'INVALID_ACTIONS_TYPE',
         ),
       );

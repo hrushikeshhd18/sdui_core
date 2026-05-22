@@ -99,38 +99,38 @@ void main() {
         'metadata': <String, Object?>{'custom': 'value'},
       };
       final result = SduiSchemaMigrator.migrate(v1WithMeta);
-      expect((result['metadata'] as Map)['custom'], 'value');
+      expect((result['metadata']! as Map)['custom'], 'value');
     });
 
     test('defaults missing node version to 0', () {
       final result = SduiSchemaMigrator.migrate(_kV1NoVersion);
-      final root = result['root'] as Map;
+      final root = result['root']! as Map;
       expect(root['version'], 0);
     });
 
     test('preserves existing node version', () {
       final result = SduiSchemaMigrator.migrate(_kV1Minimal);
-      final root = result['root'] as Map;
+      final root = result['root']! as Map;
       expect(root['version'], 1);
     });
 
     test('adds empty props when absent', () {
       final result = SduiSchemaMigrator.migrate(_kV1Nested);
-      final col = result['root'] as Map;
+      final col = result['root']! as Map;
       expect(col.containsKey('props'), isTrue);
       expect(col['props'], isA<Map>());
     });
 
     test('adds empty actions when absent', () {
       final result = SduiSchemaMigrator.migrate(_kV1Nested);
-      final col = result['root'] as Map;
+      final col = result['root']! as Map;
       expect(col.containsKey('actions'), isTrue);
       expect(col['actions'], isA<Map>());
     });
 
     test('migrates nested children recursively', () {
       final result = SduiSchemaMigrator.migrate(_kV1Nested);
-      final col = result['root'] as Map;
+      final col = result['root']! as Map;
       final children = col['children'] as List;
       final child = children.first as Map;
       expect(child['version'], 0);
@@ -141,7 +141,7 @@ void main() {
     test('does not mutate the original payload', () {
       final original = Map<String, Object?>.from(_kV1NoVersion);
       SduiSchemaMigrator.migrate(original);
-      final root = original['root'] as Map;
+      final root = original['root']! as Map;
       expect(root.containsKey('version'), isFalse);
     });
 

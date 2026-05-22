@@ -12,6 +12,11 @@ import 'package:sdui_core/src/widgets/sdui_debug_overlay.dart';
 /// Holds no state — call [render] whenever you have a fresh tree. The renderer
 /// uses [SduiKeyManager] for deterministic keying so Flutter's reconciliation
 /// can skip unchanged subtrees.
+///
+/// Every node is wrapped in a try-catch. If a builder throws (e.g. a missing
+/// required prop or an unregistered type), the renderer returns an inline error
+/// tile in debug mode and a [SizedBox.shrink] in release mode — so one bad node
+/// can never crash the whole screen.
 abstract final class SduiRenderer {
   /// Converts [node] into the corresponding Flutter widget subtree.
   ///
@@ -71,12 +76,29 @@ abstract final class SduiRenderer {
   }
 
   static Widget _renderLeaf(SduiLeafNode node, SduiBuildContext ctx) {
-    final builder = ctx.registry.resolve(node.type, nodePath: ctx.nodePath);
-    final built = KeyedSubtree(
+    Widget child;
+    try {
+      final builder = ctx.registry.resolve(node.type, nodePath: ctx.nodePath);
+      child = builder(node, ctx);
+    } catch (e, stack) {
+      child = _RendererErrorTile(node: node, error: e, path: ctx.nodePath);
+      if (kDebugMode) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: e,
+            stack: stack,
+            context: ErrorDescription(
+              'rendering SDUI node "${node.type}" at path "${ctx.nodePath}"',
+            ),
+          ),
+        );
+      }
+    }
+    final keyed = KeyedSubtree(
       key: SduiKeyManager.keyFor(node, parentPath: ctx.nodePath),
-      child: builder(node, ctx),
+      child: child,
     );
-    return _wrapDebug(built, node, ctx);
+    return _wrapDebug(keyed, node, ctx);
   }
 
   static Widget _renderParent(SduiParentNode node, SduiBuildContext ctx) {
@@ -88,16 +110,33 @@ abstract final class SduiRenderer {
     // Stash children in context so parent builders can retrieve them via
     // ctx.childWidgets(node) without re-entering the renderer.
     final ctxWithKids = ctx.withChildren(node.id, childWidgets);
-    final builder = ctx.registry.resolve(node.type, nodePath: ctx.nodePath);
 
-    final isolate = node.props['isolateRepaint'] as bool? ?? false;
-    final built = KeyedSubtree(
+    Widget child;
+    try {
+      final builder = ctx.registry.resolve(node.type, nodePath: ctx.nodePath);
+      final isolate = node.props['isolateRepaint'] as bool? ?? false;
+      child = builder(node, ctxWithKids);
+      if (isolate) child = RepaintBoundary(child: child);
+    } catch (e, stack) {
+      child = _RendererErrorTile(node: node, error: e, path: ctx.nodePath);
+      if (kDebugMode) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: e,
+            stack: stack,
+            context: ErrorDescription(
+              'rendering SDUI node "${node.type}" at path "${ctx.nodePath}"',
+            ),
+          ),
+        );
+      }
+    }
+
+    final keyed = KeyedSubtree(
       key: SduiKeyManager.keyFor(node, parentPath: ctx.nodePath),
-      child: builder(node, ctxWithKids),
+      child: child,
     );
-
-    final wrapped = isolate ? RepaintBoundary(child: built) : built;
-    return _wrapDebug(wrapped, node, ctx);
+    return _wrapDebug(keyed, node, ctx);
   }
 
   static Widget _renderUnknown(SduiUnknownNode node, SduiBuildContext ctx) {
@@ -117,6 +156,46 @@ abstract final class SduiRenderer {
       node: node,
       nodePath: ctx.nodePath,
       child: child,
+    );
+  }
+}
+
+/// Shown in place of a node whose builder threw at render time.
+///
+/// Visible in debug builds only. Release builds return [SizedBox.shrink]
+/// so the rest of the screen keeps rendering.
+class _RendererErrorTile extends StatelessWidget {
+  const _RendererErrorTile({
+    required this.node,
+    required this.error,
+    required this.path,
+  });
+
+  final SduiNode node;
+  final Object error;
+  final String path;
+
+  @override
+  Widget build(BuildContext context) {
+    if (kReleaseMode) return const SizedBox.shrink();
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: const Color(0xFFDD2222), width: 2),
+        color: const Color(0x18FF0000),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Text(
+          'SDUI render error — ${node.type}\n'
+          'Path: $path\n'
+          '$error',
+          style: const TextStyle(
+            color: Color(0xFFCC0000),
+            fontSize: 11,
+            fontFamily: 'monospace',
+          ),
+        ),
+      ),
     );
   }
 }

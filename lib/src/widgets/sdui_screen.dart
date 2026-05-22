@@ -290,45 +290,47 @@ class _SduiScreenState extends State<SduiScreen> {
     SduiScope? scope,
   ) =>
       (action, ctx) async {
-      final contentMap = action.payload['content'];
-      if (contentMap is! Map) {
-        return SduiActionResult.failure(
-          message:
-              '"content" map is required in ${action.type} payload',
-        );
-      }
-      if (!ctx.flutterContext.mounted) return const SduiActionResult.success();
-
-      final node = SduiParser.parse({
-        'sdui_version': '1.0',
-        'root': Map<String, Object?>.from(contentMap),
-      });
-
-      Widget buildChild(BuildContext innerCtx) => SduiRenderer.render(
-            node,
-            SduiBuildContext(
-              flutterContext: innerCtx,
-              registry: registry,
-              actionRegistry: scope?.actionRegistry ?? SduiActionRegistry.defaults,
-              nodePath: 'overlay',
-              navigatorKey: scope?.navigatorKey,
-            ),
+        final contentMap = action.payload['content'];
+        if (contentMap is! Map) {
+          return SduiActionResult.failure(
+            message: '"content" map is required in ${action.type} payload',
           );
+        }
+        if (!ctx.flutterContext.mounted) {
+          return const SduiActionResult.success();
+        }
 
-      if (action.type == SduiActionType.showBottomSheet) {
-        await showModalBottomSheet<void>(
-          context: ctx.flutterContext,
-          isScrollControlled: true,
-          builder: buildChild,
-        );
-      } else {
-        await showDialog<void>(
-          context: ctx.flutterContext,
-          builder: buildChild,
-        );
-      }
-      return const SduiActionResult.success();
-    };
+        final node = SduiParser.parse({
+          'sdui_version': '1.0',
+          'root': Map<String, Object?>.from(contentMap),
+        });
+
+        Widget buildChild(BuildContext innerCtx) => SduiRenderer.render(
+              node,
+              SduiBuildContext(
+                flutterContext: innerCtx,
+                registry: registry,
+                actionRegistry:
+                    scope?.actionRegistry ?? SduiActionRegistry.defaults,
+                nodePath: 'overlay',
+                navigatorKey: scope?.navigatorKey,
+              ),
+            );
+
+        if (action.type == SduiActionType.showBottomSheet) {
+          await showModalBottomSheet<void>(
+            context: ctx.flutterContext,
+            isScrollControlled: true,
+            builder: buildChild,
+          );
+        } else {
+          await showDialog<void>(
+            context: ctx.flutterContext,
+            builder: buildChild,
+          );
+        }
+        return const SduiActionResult.success();
+      };
 }
 
 // ── Default error widget ─────────────────────────────────────────────────────

@@ -239,7 +239,10 @@ void main() {
           'actions': 'not_a_map',
         },
       });
-      expect(result.errors.any((e) => e.code == 'INVALID_ACTIONS_TYPE'), isTrue);
+      expect(
+        result.errors.any((e) => e.code == 'INVALID_ACTIONS_TYPE'),
+        isTrue,
+      );
     });
 
     test('valid props and actions pass without errors', () {
@@ -312,7 +315,10 @@ void main() {
           ],
         },
       });
-      expect(result.errors.any((e) => e.code == 'MISSING_NODE_VERSION'), isTrue);
+      expect(
+        result.errors.any((e) => e.code == 'MISSING_NODE_VERSION'),
+        isTrue,
+      );
     });
 
     test('v1.0 node missing version does NOT emit MISSING_NODE_VERSION', () {
