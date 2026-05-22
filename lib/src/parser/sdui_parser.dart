@@ -36,7 +36,7 @@ SduiNode _parseStringTask(String jsonString) {
 /// ```
 abstract final class SduiParser {
   /// Schema versions this parser understands.
-  static const List<String> supportedVersions = ['1.0'];
+  static const List<String> supportedVersions = ['1.0', '2.0'];
 
   // Set of types that are always treated as parent (layout) nodes regardless
   // of whether they happen to be registered in the widget registry.

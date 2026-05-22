@@ -1,3 +1,34 @@
+## 0.4.0
+
+### Phase 2 — JSON Schema complete
+
+**`schema/v1.json` and `schema/v2.json` — formal JSON Schema (draft-07)**
+- `schema/v1.json` fully describes the v1.0 payload structure: `sdui_version`, `root`, node fields (`type`, `id`, `version`, `props`, `actions`, `children`), and `action` objects. Backend teams validate against this with any JSON Schema tool (`ajv`, `jsonschema`, etc.).
+- `schema/v2.json` adds a root-level `metadata` object and makes `version`, `props`, and `actions` required on every node.
+
+**`SduiSchemaMigrator` — v1.0 → v2.0 migration utility**
+- `SduiSchemaMigrator.migrate(payload)` — converts a v1.0 payload to v2.0. Bumps `sdui_version`, adds `metadata: {}` if absent, and defaults missing node `version`, `props`, and `actions` to `0`, `{}`, and `{}` respectively. Recursive across the full tree. Returns the original map unchanged when already at v2.0 (idempotent, never mutates input).
+- `SduiSchemaMigrator.needsMigration(payload)` — returns `true` when the payload is below `latestVersion`.
+- `SduiSchemaMigrator.schemaVersion(payload)` — returns the `sdui_version` string or `null`.
+- `SduiSchemaMigrator.latestVersion` (`"2.0"`) and `readableVersions` (`['1.0', '2.0']`) constants.
+- Throws `ArgumentError` for missing or unrecognised schema versions.
+
+**`SduiParser`: v2.0 support**
+- `SduiParser.supportedVersions` is now `['1.0', '2.0']`. The parser accepts both formats without any application code changes.
+- `metadata` is a root-level field silently ignored by the node parser — it does not affect the `SduiNode` tree.
+
+**`SduiValidator`: version-aware validation**
+- v2.0 payloads trigger stricter rules: node `version` field is required (`MISSING_NODE_VERSION` error code).
+- Both versions: `props` and `actions` fields are type-checked as JSON objects when present (`INVALID_PROPS_TYPE`, `INVALID_ACTIONS_TYPE` error codes).
+- v2.0: root `metadata` field is validated as a JSON object if present (warning on wrong type).
+- `SduiValidator.validate` default `supportedVersions` updated to `['1.0', '2.0']`.
+
+**Testing**
+- 38 new tests across `sdui_schema_migrator_test.dart`, `sdui_validator_test.dart` (v2 groups), and `sdui_parser_test.dart` (v2 group).
+- Full suite: 208 tests, all passing.
+
+---
+
 ## 0.3.1
 
 ### Bug fixes

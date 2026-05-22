@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/hrushikeshhd18/sdui_core/main/schema/v2.json",
+  "title": "sdui_core v2.0 Payload",
+  "description": "JSON Schema (draft-07) for sdui_core v2.0 server-driven UI payloads. v2.0 adds a root-level metadata object and makes node fields explicit.",
+  "type": "object",
+  "required": ["sdui_version", "root"],
+  "additionalProperties": false,
+  "properties": {
+    "sdui_version": {
+      "type": "string",
+      "const": "2.0",
+      "description": "Schema version identifier. Must be \"2.0\" for this schema."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional root-level metadata for analytics, A/B experiments, or deployment context. Not rendered — forwarded as-is to observability integrations.",
+      "examples": [
+        { "experiment": "checkout_v2", "cohort": "control" },
+        { "deploy_id": "abc123", "environment": "production" }
+      ]
+    },
+    "root": {
+      "$ref": "#/definitions/node",
+      "description": "The root node of the UI tree."
+    }
+  },
+  "definitions": {
+    "node": {
+      "type": "object",
+      "required": ["type", "id", "version", "props", "actions"],
+      "additionalProperties": false,
+      "description": "v2.0 nodes require version, props, and actions to be explicit.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Registered widget type string, e.g. \"sdui:column\" or \"myapp:banner\"."
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable, server-assigned identifier used for diffing. Must be unique across the entire tree. Prefer snake_case with no spaces."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Required in v2.0. Increment when this node's content changes. The renderer rebuilds only nodes whose version increases."
+        },
+        "props": {
+          "type": "object",
+          "description": "Required in v2.0 (use {} if no props). Arbitrary key/value data forwarded to the widget builder."
+        },
+        "actions": {
+          "type": "object",
+          "description": "Required in v2.0 (use {} if no actions). Named gesture handlers keyed by trigger name, e.g. \"onTap\".",
+          "additionalProperties": {
+            "$ref": "#/definitions/action"
+          }
+        },
+        "children": {
+          "type": "array",
+          "description": "Ordered list of child nodes.",
+          "items": {
+            "$ref": "#/definitions/node"
+          }
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "required": ["type", "event"],
+      "additionalProperties": false,
+      "description": "Describes a side-effect triggered by a user gesture.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Built-in action types: \"navigate\", \"dispatch\", \"show_snackbar\", \"open_url\", \"copy_to_clipboard\", \"show_bottom_sheet\", \"show_dialog\", \"dismiss_bottom_sheet\", \"refresh\".",
+          "examples": [
+            "navigate",
+            "dispatch",
+            "show_snackbar",
+            "open_url",
+            "copy_to_clipboard",
+            "show_bottom_sheet",
+            "show_dialog",
+            "dismiss_bottom_sheet",
+            "refresh"
+          ]
+        },
+        "event": {
+          "type": "string",
+          "description": "Event name forwarded to the registered Dart action handler."
+        },
+        "payload": {
+          "type": "object",
+          "description": "Arbitrary key/value data passed to the action handler."
+        },
+        "debounceMs": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Milliseconds to debounce repeated triggers."
+        }
+      }
+    }
+  }
+}

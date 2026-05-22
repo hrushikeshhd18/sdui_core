@@ -112,6 +112,7 @@ export 'src/widgets/builders/material_widgets.dart';
 // Widgets (public API)
 export 'src/widgets/sdui_bindings.dart';
 export 'src/widgets/sdui_debug_overlay.dart';
+export 'src/widgets/sdui_error_boundary.dart';
 export 'src/widgets/sdui_scope.dart';
 export 'src/widgets/sdui_screen.dart' hide SduiScreenState;
 export 'src/widgets/sdui_theme.dart';

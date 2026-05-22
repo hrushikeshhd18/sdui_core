@@ -21,7 +21,7 @@ void main() {
 
     test('unsupported sdui_version emits INVALID_VERSION', () {
       final result = SduiValidator.validate({
-        'sdui_version': '2.0',
+        'sdui_version': '99.0',
         'root': {'type': 'sdui:text', 'id': 'x'},
       });
       expect(result.isValid, isFalse);
@@ -32,7 +32,13 @@ void main() {
       final result = SduiValidator.validate(
         {
           'sdui_version': '2.0',
-          'root': {'type': 'sdui:text', 'id': 'x'},
+          'root': {
+            'type': 'sdui:text',
+            'id': 'x',
+            'version': 1, // required in v2
+            'props': {},
+            'actions': {},
+          },
         },
         supportedVersions: ['2.0'],
       );
@@ -206,6 +212,167 @@ void main() {
       );
       expect(err.toString(), contains('TEST_CODE'));
       expect(err.toString(), contains('root/child'));
+    });
+  });
+
+  group('SduiValidator — props/actions type checks', () {
+    test('non-map props emits INVALID_PROPS_TYPE', () {
+      final result = SduiValidator.validate({
+        'sdui_version': '1.0',
+        'root': {
+          'type': 'sdui:text',
+          'id': 'x',
+          'version': 1,
+          'props': 'not_a_map',
+        },
+      });
+      expect(result.errors.any((e) => e.code == 'INVALID_PROPS_TYPE'), isTrue);
+    });
+
+    test('non-map actions emits INVALID_ACTIONS_TYPE', () {
+      final result = SduiValidator.validate({
+        'sdui_version': '1.0',
+        'root': {
+          'type': 'sdui:text',
+          'id': 'x',
+          'version': 1,
+          'actions': 'not_a_map',
+        },
+      });
+      expect(result.errors.any((e) => e.code == 'INVALID_ACTIONS_TYPE'), isTrue);
+    });
+
+    test('valid props and actions pass without errors', () {
+      final result = SduiValidator.validate({
+        'sdui_version': '1.0',
+        'root': {
+          'type': 'sdui:text',
+          'id': 'x',
+          'version': 1,
+          'props': {'text': 'hi'},
+          'actions': {},
+        },
+      });
+      expect(result.isValid, isTrue);
+    });
+  });
+
+  group('SduiValidator — v2.0 schema', () {
+    test('valid v2.0 payload passes', () {
+      final result = SduiValidator.validate({
+        'sdui_version': '2.0',
+        'metadata': {'experiment': 'control'},
+        'root': {
+          'type': 'sdui:text',
+          'id': 'txt',
+          'version': 1,
+          'props': {'text': 'Hello'},
+          'actions': {},
+        },
+      });
+      expect(result.isValid, isTrue);
+      expect(result.errors, isEmpty);
+    });
+
+    test('v2.0 node missing version emits MISSING_NODE_VERSION', () {
+      final result = SduiValidator.validate({
+        'sdui_version': '2.0',
+        'root': {
+          'type': 'sdui:text',
+          'id': 'txt',
+          // no version
+          'props': {},
+          'actions': {},
+        },
+      });
+      expect(result.isValid, isFalse);
+      expect(
+        result.errors.any((e) => e.code == 'MISSING_NODE_VERSION'),
+        isTrue,
+      );
+    });
+
+    test('v2.0 child node missing version emits MISSING_NODE_VERSION', () {
+      final result = SduiValidator.validate({
+        'sdui_version': '2.0',
+        'root': {
+          'type': 'sdui:column',
+          'id': 'col',
+          'version': 1,
+          'props': {},
+          'actions': {},
+          'children': [
+            {
+              'type': 'sdui:text',
+              'id': 'child',
+              // no version on child
+              'props': {},
+              'actions': {},
+            },
+          ],
+        },
+      });
+      expect(result.errors.any((e) => e.code == 'MISSING_NODE_VERSION'), isTrue);
+    });
+
+    test('v1.0 node missing version does NOT emit MISSING_NODE_VERSION', () {
+      final result = SduiValidator.validate({
+        'sdui_version': '1.0',
+        'root': {
+          'type': 'sdui:text',
+          'id': 'txt',
+          // no version — valid in v1
+          'props': {},
+          'actions': {},
+        },
+      });
+      expect(result.isValid, isTrue);
+      expect(
+        result.errors.any((e) => e.code == 'MISSING_NODE_VERSION'),
+        isFalse,
+      );
+    });
+
+    test('v2.0 root metadata that is not a map emits a warning', () {
+      final result = SduiValidator.validate({
+        'sdui_version': '2.0',
+        'metadata': 'invalid',
+        'root': {
+          'type': 'sdui:text',
+          'id': 'txt',
+          'version': 1,
+          'props': {},
+          'actions': {},
+        },
+      });
+      expect(result.isValid, isTrue); // warning, not error
+      expect(result.warnings, isNotEmpty);
+    });
+
+    test('v2.0 without metadata is still valid (metadata is optional)', () {
+      final result = SduiValidator.validate({
+        'sdui_version': '2.0',
+        'root': {
+          'type': 'sdui:text',
+          'id': 'txt',
+          'version': 1,
+          'props': {},
+          'actions': {},
+        },
+      });
+      expect(result.isValid, isTrue);
+    });
+
+    test('v2.0 reported as unsupported when not in supportedVersions list', () {
+      final result = SduiValidator.validate(
+        {
+          'sdui_version': '2.0',
+          'root': {'type': 'sdui:text', 'id': 'x', 'version': 1},
+        },
+        supportedVersions: ['1.0'],
+      );
+      expect(result.isValid, isFalse);
+      expect(result.errors.any((e) => e.code == 'INVALID_VERSION'), isTrue);
     });
   });
 }

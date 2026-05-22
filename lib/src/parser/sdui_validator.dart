@@ -73,13 +73,25 @@ final class SduiValidationResult {
 ///
 /// Validates the full tree in one pass, collecting all errors rather than
 /// throwing on the first one. Use [SduiParser.validate] to call this.
+///
+/// ## Version-aware validation
+///
+/// Rules that differ between schema versions:
+///
+/// | Rule | v1.0 | v2.0 |
+/// |---|---|---|
+/// | Node `version` field | Optional | Required (`MISSING_NODE_VERSION`) |
+/// | Root `metadata` field | Ignored | Validated as object if present |
+/// | Node `props` type | Not checked | Must be object (`INVALID_PROPS_TYPE`) |
+/// | Node `actions` type | Must be object if present | Must be object (`INVALID_ACTIONS_TYPE`) |
 abstract final class SduiValidator {
   /// Validates [json] and returns a structured result.
   ///
   /// Call with the decoded top-level map (including `sdui_version`).
+  /// Pass [supportedVersions] to override the accepted schema versions.
   static SduiValidationResult validate(
     Map<String, Object?> json, {
-    List<String> supportedVersions = const ['1.0'],
+    List<String> supportedVersions = const ['1.0', '2.0'],
   }) {
     final errors = <SduiValidationError>[];
     final warnings = <SduiValidationWarning>[];
@@ -87,6 +99,7 @@ abstract final class SduiValidator {
 
     // Check sdui_version.
     final version = json['sdui_version'];
+    String? resolvedVersion;
     if (version == null) {
       errors.add(
         const SduiValidationError(
@@ -104,6 +117,23 @@ abstract final class SduiValidator {
           code: 'INVALID_VERSION',
         ),
       );
+    } else {
+      resolvedVersion = version as String;
+    }
+
+    final isV2 = resolvedVersion == '2.0';
+
+    // v2: validate optional root metadata field.
+    if (isV2) {
+      final metadata = json['metadata'];
+      if (metadata != null && metadata is! Map) {
+        warnings.add(
+          const SduiValidationWarning(
+            path: '<root>',
+            message: '"metadata" must be a JSON object if present.',
+          ),
+        );
+      }
     }
 
     // Locate the root node (may be under 'root' key or the map itself).
@@ -115,6 +145,7 @@ abstract final class SduiValidator {
         errors,
         warnings,
         seenIds,
+        isV2: isV2,
       );
     } else if (version != null) {
       errors.add(
@@ -138,8 +169,9 @@ abstract final class SduiValidator {
     String path,
     List<SduiValidationError> errors,
     List<SduiValidationWarning> warnings,
-    Map<String, String> seenIds,
-  ) {
+    Map<String, String> seenIds, {
+    required bool isV2,
+  }) {
     final type = node['type'];
     if (type == null || (type is String && type.isEmpty)) {
       errors.add(
@@ -183,7 +215,19 @@ abstract final class SduiValidator {
     }
 
     final version = node['version'];
-    if (version != null && version is! int && version is! double) {
+    if (version == null) {
+      // v2 requires an explicit version on every node.
+      if (isV2) {
+        errors.add(
+          SduiValidationError(
+            path: path,
+            message:
+                'Node is missing the required "version" field (required in sdui_version 2.0).',
+            code: 'MISSING_NODE_VERSION',
+          ),
+        );
+      }
+    } else if (version is! int && version is! double) {
       errors.add(
         SduiValidationError(
           path: path,
@@ -193,8 +237,29 @@ abstract final class SduiValidator {
       );
     }
 
+    // Validate props type (both versions).
+    final props = node['props'];
+    if (props != null && props is! Map) {
+      errors.add(
+        SduiValidationError(
+          path: path,
+          message: '"props" must be a JSON object, got: ${props.runtimeType}',
+          code: 'INVALID_PROPS_TYPE',
+        ),
+      );
+    }
+
+    // Validate actions type and contents (both versions).
     final actions = node['actions'];
-    if (actions != null && actions is Map) {
+    if (actions != null && actions is! Map) {
+      errors.add(
+        SduiValidationError(
+          path: path,
+          message: '"actions" must be a JSON object, got: ${actions.runtimeType}',
+          code: 'INVALID_ACTIONS_TYPE',
+        ),
+      );
+    } else if (actions is Map) {
       for (final entry in actions.entries) {
         final actionVal = entry.value;
         if (actionVal is Map) {
@@ -239,6 +304,7 @@ abstract final class SduiValidator {
             errors,
             warnings,
             seenIds,
+            isV2: isV2,
           );
         } else {
           errors.add(

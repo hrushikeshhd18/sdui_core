@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/hrushikeshhd18/sdui_core/main/schema/v1.json",
+  "title": "sdui_core v1.0 Payload",
+  "description": "JSON Schema (draft-07) for sdui_core v1.0 server-driven UI payloads. Backend teams can validate JSON against this schema before deploying to clients.",
+  "type": "object",
+  "required": ["sdui_version", "root"],
+  "additionalProperties": false,
+  "properties": {
+    "sdui_version": {
+      "type": "string",
+      "const": "1.0",
+      "description": "Schema version identifier. Must be \"1.0\" for this schema."
+    },
+    "root": {
+      "$ref": "#/definitions/node",
+      "description": "The root node of the UI tree."
+    }
+  },
+  "definitions": {
+    "node": {
+      "type": "object",
+      "required": ["type", "id"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Registered widget type string, e.g. \"sdui:column\" or \"myapp:banner\"."
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable, server-assigned identifier used for diffing. Must be unique across the entire tree. Prefer snake_case with no spaces."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Increment when this node's content changes. The renderer rebuilds only nodes whose version increases. Optional in v1.0."
+        },
+        "props": {
+          "type": "object",
+          "description": "Arbitrary key/value data forwarded to the widget builder."
+        },
+        "actions": {
+          "type": "object",
+          "description": "Named gesture handlers keyed by trigger name, e.g. \"onTap\".",
+          "additionalProperties": {
+            "$ref": "#/definitions/action"
+          }
+        },
+        "children": {
+          "type": "array",
+          "description": "Ordered list of child nodes. Only layout types (column, row, stack, etc.) render children.",
+          "items": {
+            "$ref": "#/definitions/node"
+          }
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "required": ["type", "event"],
+      "additionalProperties": false,
+      "description": "Describes a side-effect triggered by a user gesture.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Built-in action types: \"navigate\", \"dispatch\", \"show_snackbar\", \"open_url\", \"copy_to_clipboard\", \"show_bottom_sheet\", \"show_dialog\", \"dismiss_bottom_sheet\", \"refresh\". Custom types route to registered Dart handlers.",
+          "examples": [
+            "navigate",
+            "dispatch",
+            "show_snackbar",
+            "open_url",
+            "copy_to_clipboard",
+            "show_bottom_sheet",
+            "show_dialog",
+            "dismiss_bottom_sheet",
+            "refresh"
+          ]
+        },
+        "event": {
+          "type": "string",
+          "description": "Event name forwarded to the registered Dart action handler."
+        },
+        "payload": {
+          "type": "object",
+          "description": "Arbitrary key/value data passed to the action handler."
+        },
+        "debounceMs": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Milliseconds to debounce repeated triggers. Prevents double-tap issues on slow devices."
+        }
+      }
+    }
+  }
+}
