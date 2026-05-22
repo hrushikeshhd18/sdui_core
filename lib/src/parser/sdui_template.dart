@@ -141,8 +141,7 @@ abstract final class SduiTemplateResolver {
         // Deep-merge props
         final templateProps =
             (merged['props'] as Map?)?.cast<String, Object?>() ?? {};
-        final refProps =
-            (entry.value as Map?)?.cast<String, Object?>() ?? {};
+        final refProps = (entry.value as Map?)?.cast<String, Object?>() ?? {};
         merged['props'] = {
           ...templateProps,
           ...refProps,
