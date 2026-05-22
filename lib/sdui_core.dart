@@ -88,6 +88,7 @@ export 'src/models/sdui_node.dart';
 export 'src/models/sdui_props.dart';
 // Parser
 export 'src/parser/sdui_parser.dart';
+export 'src/parser/sdui_schema_migrator.dart';
 export 'src/parser/sdui_validator.dart';
 // Registry
 export 'src/registry/action_registry.dart';
@@ -106,6 +107,7 @@ export 'src/utils/sdui_logger.dart';
 // Built-in widget builders
 export 'src/widgets/builders/core_widgets.dart';
 export 'src/widgets/builders/cupertino_widgets.dart';
+export 'src/widgets/builders/form_widgets.dart';
 export 'src/widgets/builders/material_widgets.dart';
 // Widgets (public API)
 export 'src/widgets/sdui_bindings.dart';

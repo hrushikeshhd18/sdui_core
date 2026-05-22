@@ -128,8 +128,12 @@ Future<void> pumpSduiWidget(
   SduiWidgetRegistry? registry,
   SduiActionRegistry? actionRegistry,
 }) async {
-  final reg =
-      registry ?? (SduiWidgetRegistry()..registerAll(createCoreWidgets()));
+  final reg = registry ??
+      (SduiWidgetRegistry()
+        ..registerAll(createCoreWidgets())
+        ..registerAll(createFormWidgets())
+        ..registerAll(createMaterialWidgets())
+        ..registerAll(createCupertinoWidgets()));
   final actions = actionRegistry ?? SduiActionRegistry();
 
   await tester.pumpWidget(

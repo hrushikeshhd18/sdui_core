@@ -5,6 +5,7 @@ import 'package:sdui_core/src/registry/action_registry.dart';
 import 'package:sdui_core/src/registry/widget_registry.dart';
 import 'package:sdui_core/src/widgets/builders/core_widgets.dart';
 import 'package:sdui_core/src/widgets/builders/cupertino_widgets.dart';
+import 'package:sdui_core/src/widgets/builders/form_widgets.dart';
 import 'package:sdui_core/src/widgets/builders/material_widgets.dart';
 import 'package:sdui_core/src/widgets/sdui_screen.dart' show SduiScreen;
 
@@ -66,6 +67,7 @@ class SduiScope extends InheritedWidget {
     SduiWidgetRegistry.configureDefaultFactory(
       () => {
         ...createCoreWidgets(),
+        ...createFormWidgets(),
         ...createMaterialWidgets(),
         ...createCupertinoWidgets(),
       },
